@@ -1,79 +1,142 @@
-import Stack from './stack.js';
-import fs from 'fs';
-import path from 'path';
+import Stack from "./stack.js";
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
 
-class SimpleVM {
-    constructor() {
-        this.stack = new Stack();
-        this.registers = {};
+class ValkyrieVM {
+  constructor() {
+    this.stacks = {
+      1: new Stack(),
+      2: new Stack(),
+      3: new Stack(),
+      4: new Stack(),
+      5: new Stack(),
+      6: new Stack(),
+      7: new Stack(),
+      buffer: new Stack(),
+    };
+    this.registers = {};
+  }
+
+  execute(instruction) {
+    const parts = instruction.trim().split(/\s+/);
+    const op = parts[0];
+    const arg = parts[1] ? (isNaN(Number(parts[1])) ? parts[1] : Number(parts[1])) : undefined;
+    const stackNumber = parts[2] ? Number(parts[2]) : 1; // Default to stack 1
+
+    const stack = this.stacks[stackNumber];
+
+    if (!stack) {
+      console.log(`Stack ${stackNumber} does not exist`);
+      return;
     }
 
-    execute(instruction) {
-        const [op, arg] = instruction.split(' ');
-
-        switch (op) {
-            case 'PUSH':
-                this.stack.push(parseInt(arg, 10));
-                break;
-            case 'POP':
-                this.stack.pop();
-                break;
-            case 'ADD':
-                const a = this.stack.pop();
-                const b = this.stack.pop();
-                this.stack.push(a + b);
-                break;
-            case 'SUB':
-                const x = this.stack.pop();
-                const y = this.stack.pop();
-                this.stack.push(y - x);
-                break;
-            case 'MUL':
-                const m = this.stack.pop();
-                const n = this.stack.pop();
-                this.stack.push(m * n);
-                break;
-            case 'DIV':
-                const d1 = this.stack.pop();
-                const d2 = this.stack.pop();
-                this.stack.push(Math.floor(d2 / d1));
-                break;
-            case 'SWAP':
-                const s1 = this.stack.pop();
-                const s2 = this.stack.pop();
-                this.stack.push(s1);
-                this.stack.push(s2);
-                break;
-            case 'EMPTY':
-                while (!this.stack.isEmpty()) {
-                    this.stack.pop();
-                }
-                break;
-            case 'PRINT':
-                console.log(this.stack.peek());
-                break;
-            default:
-                console.log(`Unknown instruction: ${op}`);
+    switch (op) {
+      case "PUSH":
+        if (arg !== undefined) {
+          stack.push(arg);
+        } else {
+          console.log("PUSH operation requires an argument");
         }
+        break;
+      case "POP":
+        stack.pop();
+        break;
+      case "ADD":
+        const a = Number(stack.pop());
+        const b = Number(stack.pop());
+        if (!isNaN(a) && !isNaN(b)) {
+          stack.push(a + b);
+        } else {
+          console.log("ADD operation requires two numeric operands");
+        }
+        break;
+      case "SUB":
+        const x = Number(stack.pop());
+        const y = Number(stack.pop());
+        if (!isNaN(x) && !isNaN(y)) {
+          stack.push(x - y);
+        } else {
+          console.log("SUB operation requires two numeric operands");
+        }
+        break;
+      case "MUL":
+        const m = Number(stack.pop());
+        const n = Number(stack.pop());
+        if (!isNaN(m) && !isNaN(n)) {
+          stack.push(m * n);
+        } else {
+          console.log("MUL operation requires numeric operands");
+        }
+        break;
+      case "DIV":
+        const d1 = Number(stack.pop());
+        const d2 = Number(stack.pop());
+        if (!isNaN(d1) && !isNaN(d2)) {
+          if (d2 !== 0) {
+            stack.push(d1 / d2);
+          } else {
+            console.log("Cannot divide by zero");
+          }
+        } else {
+          console.log("DIV operation requires numeric operands");
+        }
+        break;
+      case "SWAP":
+        const s1 = stack.pop();
+        const s2 = stack.pop();
+        if (s1 !== undefined && s2 !== undefined) {
+          stack.push(s1);
+          stack.push(s2);
+        } else {
+          console.log("SWAP operation requires two operands");
+        }
+        break;
+      case "EMPTY":
+        while (!stack.isEmpty()) {
+          stack.pop();
+        }
+        break;
+      case "PRINT":
+        console.log(stack.peek());
+        break;
+      default:
+        console.log(`Unknown instruction: ${op}`);
     }
+  }
 
-    executeFile(filePath) {
-        const instructions = fs.readFileSync(filePath, 'utf-8').split('\n');
-        instructions.forEach(instruction => this.execute(instruction.trim()));
-    }
+  readInstructionsFromFile(filePath) {
+    let data = fs.readFileSync(filePath, "utf8");
+    return data.trim().split("\n");
+  }
 
-    executeAllValFiles(directory) {
-        const files = fs.readdirSync(directory).filter(file => path.extname(file) === '.val');
-        files.forEach(file => this.executeFile(path.join(directory, file)));
-    }
+  findValFiles(directory) {
+    return fs.readdirSync(directory).filter((file) => file.endsWith(".val"));
+  }
+
+  run(filePath) {
+    const instructions = this.readInstructionsFromFile(filePath);
+    instructions.forEach((instruction) => this.execute(instruction));
+  }
 }
 
 // Example usage:
-const vm = new SimpleVM();
-vm.execute('PUSH 10');
-vm.execute('PUSH 20');
-vm.execute('ADD');
-vm.execute('PRINT'); // Should print 30
+const vm = new ValkyrieVM();
+// vm.execute("PUSH 10");
+// vm.execute("PUSH 20");
+// vm.execute("ADD");
+// vm.execute("PRINT"); // Should print 30
 
-// Execute all .val files in the directory
-vm.executeAllValFiles('/path/to/your/directory');
+// Execute instructions from a .val file or execute all .val files in the directory
+if (process.argv.length > 2 && process.argv[2].trim()) {
+  const filePath = process.argv[2];
+  vm.run(filePath); // This will read and execute all instructions from the file
+} else {
+  const __filename = fileURLToPath(import.meta.url);
+  const directory = path.dirname(__filename);
+  const valFiles = vm.findValFiles(directory);
+  valFiles.forEach((fileName) => {
+    const filePath = path.join(directory, fileName);
+    vm.run(filePath); // For each .val file, read and execute the instructions
+  });
+}
