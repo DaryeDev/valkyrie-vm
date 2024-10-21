@@ -36,6 +36,9 @@ class ValkyrieVM {
     const parts = instruction.trim().split(/\s+/);
     const op = parts[0];
     var args = parts.slice(1);
+    const arg = parts[1] ? (isNaN(Number(parts[1])) ? parts[1] : Number(parts[1])) : undefined;
+    const stackNumber = parts[2] ? Number(parts[2]) : 1;
+    const stack = this.stacks[stackNumber];
 
     // fix string args
     let currentArg = "";
@@ -201,7 +204,16 @@ class ValkyrieVM {
         break;
 
       case "PRINT":
-        console.log(stack.peek());
+        if (arg && arg.startsWith("$")) {
+          const targetStackNumber = Number(arg.slice(1)); 
+          const targetStack = this.stacks[targetStackNumber];
+          if (!targetStack) {
+            throw new Error(`Stack ${targetStackNumber} does not exist`);
+          }
+          console.log(targetStack.peek()); //Print from target
+        } else {
+          throw new Error("PRINT operation requires a stack reference starting with '$'");
+        }
         break;
 
       default:
