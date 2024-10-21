@@ -28,6 +28,10 @@ class ValkyrieVM {
     }
   }
 
+  isStackReference(arg) {
+    return arg.startsWith("$");
+  }
+
   execute(instruction) {
     const parts = instruction.trim().split(/\s+/);
     const op = parts[0];
