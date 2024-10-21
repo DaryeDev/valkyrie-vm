@@ -13,9 +13,19 @@ class ValkyrieVM {
       5: new Stack(),
       6: new Stack(),
       7: new Stack(),
-      buffer: new Stack(),
+      B: new Stack(),
     };
     this.registers = {};
+  }
+
+  getValue(arg) {
+    if (arg.startsWith('"') && arg.endsWith('"')) {
+      return arg.slice(1, -1);
+    } else if (!isNaN(Number(arg))) {
+      return Number(arg);
+    } else if (arg.startsWith("$")) {
+      return this.stacks[arg].peek();
+    }
   }
 
   execute(instruction) {
