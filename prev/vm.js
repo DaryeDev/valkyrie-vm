@@ -181,6 +181,40 @@ class ValkyrieVM {
         break;
 
       case "MUL":
+        var to, value, multiple;
+
+        if (args.length == 3) {
+          to = args[0];
+          value = this.getValue(args[1]);
+          multiple = this.getValue(args[2]);
+        } else {
+          to = args[0];
+          value = this.getValue(args[0]);
+          multiple = this.getValue(args[1]);
+        }
+
+        // Checks and errors
+        if (!this.isStackReference(to)) {
+          throw new Error(`Invalid stack reference: ${to}.`);
+        }
+
+        if (typeof value !== typeof multiple) {
+          throw new Error(`Cannot multiply ${typeof value} by ${typeof multiple}.`);
+        }
+        
+        var validDataTypes = ["number", "string", "boolean"];
+        if (!validDataTypes.includes(typeof value) || !validDataTypes.includes(typeof multiple)) {
+          throw new Error(`Cannot multiply ${typeof value} by ${typeof multiple}.`);
+        }
+
+        // Value setting
+        if (typeof value === "string") {
+          this.stacks[to].push(value.repeat(multiple));
+        } else if (typeof multiple === "string") {
+          throw new Error(`Cannot multiply ${typeof value} by ${typeof multiple}.`);
+        } else {
+          this.stacks[to].push(Number(value) * Number(multiple));
+        }
         break;
 
       case "SWAP":
