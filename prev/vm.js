@@ -59,19 +59,25 @@ class ValkyrieVM {
         }
     }
 
-    if (!stack) {
-      console.log(`Stack ${stackNumber} does not exist`);
-      return;
-    }
-
     switch (op) {
       case "PUSH":
-        if (arg !== undefined) {
-          stack.push(arg);
+        if (arg && arg.startsWith("$")) {
+          const targetStackNumber = Number(parts[1].slice(1));
+          const targetStack = this.stacks[targetStackNumber];
+          if (!targetStack) {
+            throw new Error(`Stack ${targetStackNumber} does not exist`);
+          }
+          const valueToPush = parts[2] ? (isNaN(Number(parts[2])) ? parts[2] : Number(parts[2])) : undefined;
+          if (valueToPush !== undefined) {
+            targetStack.push(valueToPush); // PUSH
+          } else {
+            throw new Error("PUSH operation requires a value to push");
+          }
         } else {
-          console.log("PUSH operation requires an argument");
+          throw new Error("PUSH operation requires a stack reference starting with '&'");
         }
         break;
+
       case "POP":
         stack.pop();
         break;
