@@ -29,15 +29,12 @@ class ValkyrieVM {
   }
 
   isStackReference(arg) {
-    return arg.startsWith("$");
+    return arg.startsWith("$") && Object.keys(this.stacks).includes(arg);
   }
 
   execute(instruction) {
     const parts = instruction.trim().split(/\s+/);
     const op = parts[0];
-    const arg = parts[1] ? (isNaN(Number(parts[1])) ? parts[1] : Number(parts[1])) : undefined;
-    const stackNumber = parts[2] ? Number(parts[2]) : 1; // Default to stack 1
-    const stack = this.stacks[stackNumber];
     var args = parts.slice(1);
 
     // fix string args
@@ -82,44 +79,95 @@ class ValkyrieVM {
         stack.pop();
         break;
       case "ADD":
-        const a = Number(stack.pop());
-        const b = Number(stack.pop());
-        if (!isNaN(a) && !isNaN(b)) {
-          stack.push(a + b);
+        var to, value, delta;
+
+        if (args.length == 3) {
+          to = args[0];
+          value = this.getValue(args[1]);
+          delta = this.getValue(args[2]);
         } else {
-          console.log("ADD operation requires two numeric operands");
+          to = args[0];
+          value = this.getValue(args[0]);
+          delta = this.getValue(args[1]);
         }
+
+        if (!this.isStackReference(to)) {
+          throw new Error(`Invalid stack reference: ${to}.`);
+        }
+
+        this.stacks[to].push(value + delta);
         break;
       case "SUB":
-        const x = Number(stack.pop());
-        const y = Number(stack.pop());
-        if (!isNaN(x) && !isNaN(y)) {
-          stack.push(x - y);
+        var to, value, delta;
+
+        if (args.length == 3) {
+          to = args[0];
+          value = this.getValue(args[1]);
+          delta = this.getValue(args[2]);
         } else {
-          console.log("SUB operation requires two numeric operands");
+          to = args[0];
+          value = this.getValue(args[0]);
+          delta = this.getValue(args[1]);
         }
-        break;
-      case "MUL":
-        const m = Number(stack.pop());
-        const n = Number(stack.pop());
-        if (!isNaN(m) && !isNaN(n)) {
-          stack.push(m * n);
+
+        // Checks and errors
+        if (!this.isStackReference(to)) {
+          throw new Error(`Invalid stack reference: ${to}.`);
+        }
+
+        if (typeof value !== typeof delta) {
+          throw new Error(`Cannot subtract ${typeof delta} from ${typeof value}.`);
+        }
+        
+        var validDataTypes = ["number", "string", "boolean"];
+        if (!validDataTypes.includes(typeof value) || !validDataTypes.includes(typeof delta)) {
+          throw new Error(`Cannot subtract ${typeof delta} from ${typeof value}.`);
+        }
+
+        // Value setting
+        if (typeof value === "string") {
+          this.stacks[to].push(value.replace(delta, ""));
         } else {
-          console.log("MUL operation requires numeric operands");
+          this.stacks[to].push(value - delta);
         }
         break;
       case "DIV":
-        const d1 = Number(stack.pop());
-        const d2 = Number(stack.pop());
-        if (!isNaN(d1) && !isNaN(d2)) {
-          if (d2 !== 0) {
-            stack.push(d1 / d2);
-          } else {
-            console.log("Cannot divide by zero");
-          }
+      case "DIVINT":
+      case "MOD":
+        var to, value, divisor;
+
+        if (args.length == 3) {
+          to = args[0];
+          value = this.getValue(args[1]);
+          divisor = this.getValue(args[2]);
         } else {
-          console.log("DIV operation requires numeric operands");
+          to = args[0];
+          value = this.getValue(args[0]);
+          divisor = this.getValue(args[1]);
         }
+
+        // Checks and errors
+        if (!this.isStackReference(to)) {
+          throw new Error(`Invalid stack reference: ${to}.`);
+        }
+
+        if (typeof value !== typeof divisor) {
+          throw new Error(`Cannot divide ${typeof value} by ${typeof divisor}.`);
+        }
+        
+        var validDataTypes = ["number"];
+        if (!validDataTypes.includes(typeof value) || !validDataTypes.includes(typeof divisor)) {
+          throw new Error(`Cannot divide ${typeof value} by ${typeof divisor}.`);
+        }
+
+        // Value setting
+        if (op == "MOD") {
+          this.stacks[to].push(value % divisor);
+        } else {
+          this.stacks[to].push(op == "DIVINT"? Math.trunc(value / divisor) : value / delta);
+        }
+        break;
+      case "MUL":
         break;
       case "SWAP":
         const s1 = stack.pop();
