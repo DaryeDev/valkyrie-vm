@@ -21,6 +21,9 @@ class ValkyrieVM {
   execute(instruction) {
     const parts = instruction.trim().split(/\s+/);
     const op = parts[0];
+    const arg = parts[1] ? (isNaN(Number(parts[1])) ? parts[1] : Number(parts[1])) : undefined;
+    const stackNumber = parts[2] ? Number(parts[2]) : 1; // Default to stack 1
+    const stack = this.stacks[stackNumber];
     var args = parts.slice(1);
 
     // fix string args
@@ -42,128 +45,84 @@ class ValkyrieVM {
         }
     }
 
-    //PUSH TO
-    if (op === "PUSH" && parts[2] === "TO") {
-      const value = !isNaN(Number(parts[1])) ? Number(parts[1]) : parts[1]; //Valor a empujar
-      const stackNumber = Number(parts[3]); //Pila target      
-      const stack = this.stacks[stackNumber]; //Selecionamos la pila
-      if (stack) {
-        stack.push(value); //Push a la pila target
-      } else {
-        console.log(`Stack ${stackNumber} does not exist`);
-      }
-      
-    } 
-    
-    //POP FROM
-    else if (op === "POP" && parts[1] === "FROM") {
-      //La lógica es la misma que la instruccion anterior
-      const stackNumber = Number(parts[2]);
-      const stack = this.stacks[stackNumber]; 
-      if (stack) {
+    if (!stack) {
+      console.log(`Stack ${stackNumber} does not exist`);
+      return;
+    }
+
+    switch (op) {
+      case "PUSH":
+        if (arg !== undefined) {
+          stack.push(arg);
+        } else {
+          console.log("PUSH operation requires an argument");
+        }
+        break;
+      case "POP":
         stack.pop();
-      } else {
-        console.log(`Stack ${stackNumber} does not exist`);
-      }
-    }
-
-    //PRINT FROM
-    else if (op === "PRINT" && parts[1] === "FROM") {
-      const stackNumber = Number(parts[2]);
-      const stack = this.stacks[stackNumber]; 
-      if (stack) {
-        console.log(stack.peek()); 
-      } else {
-        console.log(`Stack ${stackNumber} does not exist`);
-      }
-    }
-
-    //SI NO HAY FROM, LA LOGICA DE ANTES
-    else {
-      const arg = parts[1] ? (isNaN(Number(parts[1])) ? parts[1] : Number(parts[1])) : undefined;
-      const stackNumber = parts[2] ? Number(parts[2]) : 1; // Default to stack 1
-
-      const stack = this.stacks[stackNumber];
-
-      if (!stack) {
-        console.log(`Stack ${stackNumber} does not exist`);
-        return;
-      }
-
-      switch (op) {
-        case "PUSH":
-          if (arg !== undefined) {
-            stack.push(arg);
+        break;
+      case "ADD":
+        const a = Number(stack.pop());
+        const b = Number(stack.pop());
+        if (!isNaN(a) && !isNaN(b)) {
+          stack.push(a + b);
+        } else {
+          console.log("ADD operation requires two numeric operands");
+        }
+        break;
+      case "SUB":
+        const x = Number(stack.pop());
+        const y = Number(stack.pop());
+        if (!isNaN(x) && !isNaN(y)) {
+          stack.push(x - y);
+        } else {
+          console.log("SUB operation requires two numeric operands");
+        }
+        break;
+      case "MUL":
+        const m = Number(stack.pop());
+        const n = Number(stack.pop());
+        if (!isNaN(m) && !isNaN(n)) {
+          stack.push(m * n);
+        } else {
+          console.log("MUL operation requires numeric operands");
+        }
+        break;
+      case "DIV":
+        const d1 = Number(stack.pop());
+        const d2 = Number(stack.pop());
+        if (!isNaN(d1) && !isNaN(d2)) {
+          if (d2 !== 0) {
+            stack.push(d1 / d2);
           } else {
-            console.log("PUSH operation requires an argument");
+            console.log("Cannot divide by zero");
           }
-          break;
-        case "POP":
+        } else {
+          console.log("DIV operation requires numeric operands");
+        }
+        break;
+      case "SWAP":
+        const s1 = stack.pop();
+        const s2 = stack.pop();
+        if (s1 !== undefined && s2 !== undefined) {
+          stack.push(s1);
+          stack.push(s2);
+        } else {
+          console.log("SWAP operation requires two operands");
+        }
+        break;
+      case "EMPTY":
+        while (!stack.isEmpty()) {
           stack.pop();
-          break;
-        case "ADD":
-          const a = Number(stack.pop());
-          const b = Number(stack.pop());
-          if (!isNaN(a) && !isNaN(b)) {
-            stack.push(a + b);
-          } else {
-            console.log("ADD operation requires two numeric operands");
-          }
-          break;
-        case "SUB":
-          const x = Number(stack.pop());
-          const y = Number(stack.pop());
-          if (!isNaN(x) && !isNaN(y)) {
-            stack.push(x - y);
-          } else {
-            console.log("SUB operation requires two numeric operands");
-          }
-          break;
-        case "MUL":
-          const m = Number(stack.pop());
-          const n = Number(stack.pop());
-          if (!isNaN(m) && !isNaN(n)) {
-            stack.push(m * n);
-          } else {
-            console.log("MUL operation requires numeric operands");
-          }
-          break;
-        case "DIV":
-          const d1 = Number(stack.pop());
-          const d2 = Number(stack.pop());
-          if (!isNaN(d1) && !isNaN(d2)) {
-            if (d2 !== 0) {
-              stack.push(d1 / d2);
-            } else {
-              console.log("Cannot divide by zero");
-            }
-          } else {
-            console.log("DIV operation requires numeric operands");
-          }
-          break;
-        case "SWAP":
-          const s1 = stack.pop();
-          const s2 = stack.pop();
-          if (s1 !== undefined && s2 !== undefined) {
-            stack.push(s1);
-            stack.push(s2);
-          } else {
-            console.log("SWAP operation requires two operands");
-          }
-          break;
-        case "EMPTY":
-          while (!stack.isEmpty()) {
-            stack.pop();
-          }
-          break;
-        case "PRINT":
-          console.log(stack.peek());
-          break;
-        default:
-          console.log(`Unknown instruction: ${op}`);
-      }
-    }
+        }
+        break;
+      case "PRINT":
+        console.log(stack.peek());
+        break;
+      default:
+        console.log(`Unknown instruction: ${op}`);
   }
+}
 
 
   readInstructionsFromFile(filePath) {
