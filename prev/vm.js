@@ -76,8 +76,18 @@ class ValkyrieVM {
         break;
 
       case "POP":
-        stack.pop();
+        if (arg && arg.startsWith("$")) {
+          const targetStackNumber = Number(arg.slice(1));
+          const targetStack = this.stacks[targetStackNumber];
+          if (!targetStack) {
+            throw new Error(`Stack ${targetStackNumber} does not exist`);
+          }
+          targetStack.pop(); // POP target
+        } else {
+          throw new Error("POP operation requires a stack reference starting with '$'");
+        }
         break;
+          
       case "ADD":
         var to, value, delta;
 

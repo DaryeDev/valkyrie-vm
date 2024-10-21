@@ -1,2 +1,4 @@
 PUSH $1 15
 PRINT
+POP $1
+PRINT
