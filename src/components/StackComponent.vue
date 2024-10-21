@@ -73,7 +73,7 @@ defineExpose({
 })
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .stack {
   max-width: 200px;
   margin: 0 auto;
