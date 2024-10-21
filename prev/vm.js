@@ -78,6 +78,7 @@ class ValkyrieVM {
       case "POP":
         stack.pop();
         break;
+
       case "ADD":
         var to, value, delta;
 
@@ -97,6 +98,7 @@ class ValkyrieVM {
 
         this.stacks[to].push(value + delta);
         break;
+
       case "SUB":
         var to, value, delta;
 
@@ -131,6 +133,7 @@ class ValkyrieVM {
           this.stacks[to].push(value - delta);
         }
         break;
+
       case "DIV":
       case "DIVINT":
       case "MOD":
@@ -167,8 +170,10 @@ class ValkyrieVM {
           this.stacks[to].push(op == "DIVINT"? Math.trunc(value / divisor) : value / delta);
         }
         break;
+
       case "MUL":
         break;
+
       case "SWAP":
         const s1 = stack.pop();
         const s2 = stack.pop();
@@ -179,16 +184,19 @@ class ValkyrieVM {
           console.log("SWAP operation requires two operands");
         }
         break;
+
       case "EMPTY":
         while (!stack.isEmpty()) {
           stack.pop();
         }
         break;
+
       case "PRINT":
         console.log(stack.peek());
         break;
+
       default:
-        console.log(`Unknown instruction: ${op}`);
+        console.error(`Unknown instruction: ${op}`);
   }
 }
 
