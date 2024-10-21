@@ -18,13 +18,13 @@ class ValkyrieVM {
     this.registers = {};
   }
 
-  getValue(arg) {
+  getValue(arg, pop = false) {
     if (arg.startsWith('"') && arg.endsWith('"')) {
       return arg.slice(1, -1);
     } else if (!isNaN(Number(arg))) {
       return Number(arg);
     } else if (arg.startsWith("$")) {
-      return this.stacks[arg].peek();
+      return pop? this.stacks[arg].pop() : this.stacks[arg].peek();
     }
   }
 
