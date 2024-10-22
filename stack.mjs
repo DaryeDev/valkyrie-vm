@@ -55,7 +55,8 @@ class Stack {
   }
 
   async clear() {
-    for (var i = 0; i < this.items.length; i++) {
+    var length = this.items.length;
+    for (let i = 0; i < length; i++) {
       await this.pop();
     }
   }
