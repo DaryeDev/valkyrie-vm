@@ -383,8 +383,8 @@ class ValkyrieVM {
           throw new Error(`Invalid stack reference: ${stack}.`);
         }
 
-        if (!min || !max) {
-          throw new Error("RANDINT operation requires two operands.");
+        if (min == undefined || max == undefined) {
+          throw new Error("RANDINT operation requires a max and a min values.");
         }
 
         if (typeof min !== "number" || typeof max !== "number") {
