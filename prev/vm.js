@@ -6,14 +6,14 @@ import { fileURLToPath } from "url";
 class ValkyrieVM {
   constructor() {
     this.stacks = {
-      1: new Stack(),
-      2: new Stack(),
-      3: new Stack(),
-      4: new Stack(),
-      5: new Stack(),
-      6: new Stack(),
-      7: new Stack(),
-      B: new Stack(),
+      $1: new Stack(),
+      $2: new Stack(),
+      $3: new Stack(),
+      $4: new Stack(),
+      $5: new Stack(),
+      $6: new Stack(),
+      $7: new Stack(),
+      $B: new Stack(),
     };
     this.registers = {};
   }
@@ -36,13 +36,6 @@ class ValkyrieVM {
     const parts = instruction.trim().split(/\s+/);
     const op = parts[0];
     var args = parts.slice(1);
-    const arg = parts[1]
-      ? isNaN(Number(parts[1]))
-        ? parts[1]
-        : Number(parts[1])
-      : undefined;
-    const stackNumber = parts[2] ? Number(parts[2]) : 1;
-    const stack = this.stacks[stackNumber];
 
     // fix string args
     let currentArg = "";
@@ -65,43 +58,27 @@ class ValkyrieVM {
 
     const operations = {
       PUSH: (args) => {
-        const arg = args[0];
-        if (arg && arg.startsWith("$")) {
-          const targetStackNumber = Number(arg.slice(1));
-          const targetStack = this.stacks[targetStackNumber];
-          if (!targetStack) {
-            throw new Error(`Stack ${targetStackNumber} does not exist`);
-          }
-          const valueToPush = args[1]
-            ? isNaN(Number(args[1]))
-              ? args[1]
-              : Number(args[1])
-            : undefined;
-          if (valueToPush !== undefined) {
-            targetStack.push(valueToPush); // PUSH
-          } else {
-            throw new Error("PUSH operation requires a value to push");
-          }
-        } else {
-          throw new Error(
-            "PUSH operation requires a stack reference starting with '$'"
-          );
+        var to = args[0];
+        var value = this.getValue(args[1]);
+
+        if (!this.isStackReference(to)) {
+          throw new Error(`Invalid stack reference: ${to}.`);
         }
+
+        if (value === undefined) {
+          throw new Error("PUSH operation requires a value to push");
+        }
+
+        this.stacks[to].push(value);
       },
       POP: (args) => {
-        const arg = args[0];
-        if (arg && arg.startsWith("$")) {
-          const targetStackNumber = Number(arg.slice(1));
-          const targetStack = this.stacks[targetStackNumber];
-          if (!targetStack) {
-            throw new Error(`Stack ${targetStackNumber} does not exist`);
-          }
-          targetStack.pop(); // POP target
-        } else {
-          throw new Error(
-            "POP operation requires a stack reference starting with '$'"
-          );
+        var to = args[0];
+
+        if (!this.isStackReference(to)) {
+          throw new Error(`Invalid stack reference: ${to}.`);
         }
+
+        this.stacks[to].push(value);
       },
       ADD: (args) => {
         var to, value, delta;
@@ -109,14 +86,18 @@ class ValkyrieVM {
           to = args[0];
           value = this.getValue(args[1]);
           delta = this.getValue(args[2]);
-        } else {
+        } else if (args.length >= 2) {
           to = args[0];
           value = this.getValue(args[0]);
           delta = this.getValue(args[1]);
+        } else {
+          throw new Error("ADD operation requires at least two arguments.");
         }
+
         if (!this.isStackReference(to)) {
           throw new Error(`Invalid stack reference: ${to}.`);
         }
+
         this.stacks[to].push(value + delta);
       },
       SUB: (args) => {
@@ -125,28 +106,30 @@ class ValkyrieVM {
           to = args[0];
           value = this.getValue(args[1]);
           delta = this.getValue(args[2]);
-        } else {
+        } else if (args.length >= 2) {
           to = args[0];
           value = this.getValue(args[0]);
           delta = this.getValue(args[1]);
+        } else {
+          throw new Error("SUB operation requires at least two arguments.");
         }
+
         if (!this.isStackReference(to)) {
           throw new Error(`Invalid stack reference: ${to}.`);
         }
+
         if (typeof value !== typeof delta) {
-          throw new Error(
-            `Cannot subtract ${typeof delta} from ${typeof value}.`
-          );
+          throw new Error(`Cannot subtract ${typeof delta} from ${typeof value}.`);
         }
+
         var validDataTypes = ["number", "string", "boolean"];
         if (
           !validDataTypes.includes(typeof value) ||
           !validDataTypes.includes(typeof delta)
         ) {
-          throw new Error(
-            `Cannot subtract ${typeof delta} from ${typeof value}.`
-          );
+          throw new Error(`Cannot subtract ${typeof delta} from ${typeof value}.`);
         }
+
         if (typeof value === "string") {
           this.stacks[to].push(value.replace(delta, ""));
         } else {
@@ -168,18 +151,14 @@ class ValkyrieVM {
           throw new Error(`Invalid stack reference: ${to}.`);
         }
         if (typeof value !== typeof divisor) {
-          throw new Error(
-            `Cannot divide ${typeof value} by ${typeof divisor}.`
-          );
+          throw new Error(`Cannot divide ${typeof value} by ${typeof divisor}.`);
         }
         var validDataTypes = ["number"];
         if (
           !validDataTypes.includes(typeof value) ||
           !validDataTypes.includes(typeof divisor)
         ) {
-          throw new Error(
-            `Cannot divide ${typeof value} by ${typeof divisor}.`
-          );
+          throw new Error(`Cannot divide ${typeof value} by ${typeof divisor}.`);
         }
         this.stacks[to].push(value / divisor);
       },
@@ -198,18 +177,14 @@ class ValkyrieVM {
           throw new Error(`Invalid stack reference: ${to}.`);
         }
         if (typeof value !== typeof divisor) {
-          throw new Error(
-            `Cannot divide ${typeof value} by ${typeof divisor}.`
-          );
+          throw new Error(`Cannot divide ${typeof value} by ${typeof divisor}.`);
         }
         var validDataTypes = ["number"];
         if (
           !validDataTypes.includes(typeof value) ||
           !validDataTypes.includes(typeof divisor)
         ) {
-          throw new Error(
-            `Cannot divide ${typeof value} by ${typeof divisor}.`
-          );
+          throw new Error(`Cannot divide ${typeof value} by ${typeof divisor}.`);
         }
         this.stacks[to].push(Math.trunc(value / divisor));
       },
@@ -228,18 +203,14 @@ class ValkyrieVM {
           throw new Error(`Invalid stack reference: ${to}.`);
         }
         if (typeof value !== typeof divisor) {
-          throw new Error(
-            `Cannot divide ${typeof value} by ${typeof divisor}.`
-          );
+          throw new Error(`Cannot divide ${typeof value} by ${typeof divisor}.`);
         }
         var validDataTypes = ["number"];
         if (
           !validDataTypes.includes(typeof value) ||
           !validDataTypes.includes(typeof divisor)
         ) {
-          throw new Error(
-            `Cannot divide ${typeof value} by ${typeof divisor}.`
-          );
+          throw new Error(`Cannot divide ${typeof value} by ${typeof divisor}.`);
         }
         this.stacks[to].push(value % divisor);
       },
@@ -257,63 +228,60 @@ class ValkyrieVM {
         if (!this.isStackReference(to)) {
           throw new Error(`Invalid stack reference: ${to}.`);
         }
-        if (typeof value !== typeof multiple) {
-          throw new Error(
-            `Cannot multiply ${typeof value} by ${typeof multiple}.`
-          );
+
+        var isStringMultipliedByNumber = (typeof value === "string" && typeof multiple === "number");
+        if ((typeof value !== typeof multiple) && !isStringMultipliedByNumber) { // Podremos multiplicar una string por un número, añadida excepción
+          throw new Error(`Cannot multiply ${typeof value} by ${typeof multiple}.`);
         }
         var validDataTypes = ["number", "string", "boolean"];
         if (
           !validDataTypes.includes(typeof value) ||
           !validDataTypes.includes(typeof multiple)
         ) {
-          throw new Error(
-            `Cannot multiply ${typeof value} by ${typeof multiple}.`
-          );
+          throw new Error(`Cannot multiply ${typeof value} by ${typeof multiple}.`);
         }
         if (typeof value === "string") {
           this.stacks[to].push(value.repeat(multiple));
         } else if (typeof multiple === "string") {
-          throw new Error(
-            `Cannot multiply ${typeof value} by ${typeof multiple}.`
-          );
+          throw new Error(`Cannot multiply ${typeof value} by ${typeof multiple}.`);
         } else {
           this.stacks[to].push(Number(value) * Number(multiple));
         }
       },
       SWAP: (args) => {
-        const stackNumber = args[0] ? Number(args[0]) : 1;
-        const stack = this.stacks[stackNumber];
-        const s1 = stack.pop();
-        const s2 = stack.pop();
-        if (s1 !== undefined && s2 !== undefined) {
-          stack.push(s1);
-          stack.push(s2);
+        var stack1 = args[0];
+        var stack2 = args[1];
+
+        if (!(stack1 && stack2)) {
+          throw new Error("SWAP operation requires two operands.");
+        }
+
+        if (!this.isStackReference(stack1)) {
+          throw new Error(`Invalid stack reference: ${stack1}.`);
+        }
+
+        this.stacks["$B"].push(this.stacks[stack1].pop());
+        this.stacks[stack1].push(this.getValue(stack2, true));
+        if (this.isStackReference(stack2)) {
+          this.stacks[stack2].push(this.stacks["$B"].pop());
         } else {
-          console.log("SWAP operation requires two operands");
+          this.stacks["$B"].pop();
         }
       },
       EMPTY: (args) => {
-        const stackNumber = args[0] ? Number(args[0]) : 1;
-        const stack = this.stacks[stackNumber];
-        while (!stack.isEmpty()) {
-          stack.pop();
+        var stack = args[0];
+        while (!this.stacks[stack].isEmpty()) {
+          this.stacks[stack].pop();
         }
       },
       PRINT: (args) => {
         const arg = args[0];
-        if (arg && arg.startsWith("$")) {
-          const targetStackNumber = Number(arg.slice(1));
-          const targetStack = this.stacks[targetStackNumber];
-          if (!targetStack) {
-            throw new Error(`Stack ${targetStackNumber} does not exist`);
-          }
-          console.log(targetStack.peek()); //Print from target
-        } else {
-          throw new Error(
-            "PRINT operation requires a stack reference starting with '$'"
-          );
+
+        if (!arg) {
+          throw new Error("PRINT operation requires an argument.");
         }
+
+        console.log(this.getValue(arg));
       },
     };
 

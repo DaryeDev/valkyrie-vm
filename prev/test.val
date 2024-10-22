@@ -1,4 +1,5 @@
 PUSH $1 15
-PUSH $1 30
-ADD $1
+PUSH $2 30
+SWAP $1 "hola caracola"
+MUL $1 2
 PRINT $1
