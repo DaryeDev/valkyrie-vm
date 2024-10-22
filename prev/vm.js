@@ -118,7 +118,9 @@ class ValkyrieVM {
         }
 
         if (typeof value !== typeof delta) {
-          throw new Error(`Cannot subtract ${typeof delta} from ${typeof value}.`);
+          throw new Error(
+            `Cannot subtract ${typeof delta} from ${typeof value}.`
+          );
         }
 
         var validDataTypes = ["number", "string", "boolean"];
@@ -126,7 +128,9 @@ class ValkyrieVM {
           !validDataTypes.includes(typeof value) ||
           !validDataTypes.includes(typeof delta)
         ) {
-          throw new Error(`Cannot subtract ${typeof delta} from ${typeof value}.`);
+          throw new Error(
+            `Cannot subtract ${typeof delta} from ${typeof value}.`
+          );
         }
 
         if (typeof value === "string") {
@@ -150,14 +154,18 @@ class ValkyrieVM {
           throw new Error(`Invalid stack reference: ${to}.`);
         }
         if (typeof value !== typeof divisor) {
-          throw new Error(`Cannot divide ${typeof value} by ${typeof divisor}.`);
+          throw new Error(
+            `Cannot divide ${typeof value} by ${typeof divisor}.`
+          );
         }
         var validDataTypes = ["number"];
         if (
           !validDataTypes.includes(typeof value) ||
           !validDataTypes.includes(typeof divisor)
         ) {
-          throw new Error(`Cannot divide ${typeof value} by ${typeof divisor}.`);
+          throw new Error(
+            `Cannot divide ${typeof value} by ${typeof divisor}.`
+          );
         }
         this.stacks[to].push(value / divisor);
       },
@@ -176,14 +184,18 @@ class ValkyrieVM {
           throw new Error(`Invalid stack reference: ${to}.`);
         }
         if (typeof value !== typeof divisor) {
-          throw new Error(`Cannot divide ${typeof value} by ${typeof divisor}.`);
+          throw new Error(
+            `Cannot divide ${typeof value} by ${typeof divisor}.`
+          );
         }
         var validDataTypes = ["number"];
         if (
           !validDataTypes.includes(typeof value) ||
           !validDataTypes.includes(typeof divisor)
         ) {
-          throw new Error(`Cannot divide ${typeof value} by ${typeof divisor}.`);
+          throw new Error(
+            `Cannot divide ${typeof value} by ${typeof divisor}.`
+          );
         }
         this.stacks[to].push(Math.trunc(value / divisor));
       },
@@ -202,14 +214,18 @@ class ValkyrieVM {
           throw new Error(`Invalid stack reference: ${to}.`);
         }
         if (typeof value !== typeof divisor) {
-          throw new Error(`Cannot divide ${typeof value} by ${typeof divisor}.`);
+          throw new Error(
+            `Cannot divide ${typeof value} by ${typeof divisor}.`
+          );
         }
         var validDataTypes = ["number"];
         if (
           !validDataTypes.includes(typeof value) ||
           !validDataTypes.includes(typeof divisor)
         ) {
-          throw new Error(`Cannot divide ${typeof value} by ${typeof divisor}.`);
+          throw new Error(
+            `Cannot divide ${typeof value} by ${typeof divisor}.`
+          );
         }
         this.stacks[to].push(value % divisor);
       },
@@ -228,23 +244,64 @@ class ValkyrieVM {
           throw new Error(`Invalid stack reference: ${to}.`);
         }
 
-        var isStringMultipliedByNumber = (typeof value === "string" && typeof multiple === "number");
-        if ((typeof value !== typeof multiple) && !isStringMultipliedByNumber) { // Podremos multiplicar una string por un número, añadida excepción
-          throw new Error(`Cannot multiply ${typeof value} by ${typeof multiple}.`);
+        var isStringMultipliedByNumber =
+          typeof value === "string" && typeof multiple === "number";
+        if (typeof value !== typeof multiple && !isStringMultipliedByNumber) {
+          // Podremos multiplicar una string por un número, añadida excepción
+          throw new Error(
+            `Cannot multiply ${typeof value} by ${typeof multiple}.`
+          );
         }
         var validDataTypes = ["number", "string", "boolean"];
         if (
           !validDataTypes.includes(typeof value) ||
           !validDataTypes.includes(typeof multiple)
         ) {
-          throw new Error(`Cannot multiply ${typeof value} by ${typeof multiple}.`);
+          throw new Error(
+            `Cannot multiply ${typeof value} by ${typeof multiple}.`
+          );
         }
         if (typeof value === "string") {
           this.stacks[to].push(value.repeat(multiple));
         } else if (typeof multiple === "string") {
-          throw new Error(`Cannot multiply ${typeof value} by ${typeof multiple}.`);
+          throw new Error(
+            `Cannot multiply ${typeof value} by ${typeof multiple}.`
+          );
         } else {
           this.stacks[to].push(Number(value) * Number(multiple));
+        }
+      },
+      EXP: (args) => {
+        var to, value, exponent;
+        if (args.length == 3) {
+          to = args[0];
+          value = this.getValue(args[1]);
+          exponent = this.getValue(args[2]);
+        } else {
+          to = args[0];
+          value = this.getValue(args[0]);
+          exponent = this.getValue(args[1]);
+        }
+        if (!this.isStackReference(to)) {
+          throw new Error(`Invalid stack reference: ${to}.`);
+        }
+
+        if (typeof value !== typeof exponent) {
+          // Podremos multiplicar una string por un número, añadida excepción
+          throw new Error(
+            `Cannot multiply ${typeof value} by ${typeof exponent}.`
+          );
+        }
+        var validDataTypes = ["number"];
+        if (
+          !validDataTypes.includes(typeof value) ||
+          !validDataTypes.includes(typeof exponent)
+        ) {
+          throw new Error(
+            `Cannot multiply ${typeof value} by ${typeof exponent}.`
+          );
+        } else {
+          this.stacks[to].push(Number(value) ** Number(exponent));
         }
       },
       SWAP: (args) => {
@@ -289,13 +346,14 @@ class ValkyrieVM {
           throw new Error(`Invalid stack reference: ${stack}.`);
         }
 
-        while (!this.stacks[stack].isEmpty()) { //Clear stack
+        while (!this.stacks[stack].isEmpty()) {
+          //Clear stack
           this.stacks[stack].pop();
         }
       },
-      SUM: (args) => {
+      COMPACT: (args) => {
         var stack = args[0];
-        var targetStack = this.stacks[stack]
+        var targetStack = this.stacks[stack];
 
         if (!this.isStackReference(stack)) {
           throw new Error(`Invalid stack reference: ${stack}.`);
@@ -304,42 +362,54 @@ class ValkyrieVM {
           throw new Error(`Stack ${stack} is empty.`);
         }
 
-
-        var sum = 0;
-        while (!targetStack.isEmpty()) { //Clear stack
-          if (typeof targetStack.peek() !== "number") {
+        var sum;
+        while (!targetStack.isEmpty()) {
+          //Clear stack
+          if (
+            typeof targetStack.peek() !== "number" &&
+            typeof targetStack.peek() !== "string"
+          ) {
             throw new Error(`Stack ${stack} contains non-numeric values.`);
           }
-          sum = sum + targetStack.pop();
+          if (sum === undefined) {
+            sum = targetStack.pop();
+          } else {
+            sum += targetStack.pop();
+          }
         }
 
         targetStack.push(sum); //push result
-      }
+      },
     };
 
-    const aliases = { // Add aliases for instructions in a dictionary to map to runes
+    const aliases = {
+      // Add aliases for instructions in a dictionary to map to runes
       PUSH: "PUSH",
-      PUSHVAL: "PUSH",
+      "𖤍": "PUSH",
       POP: "POP",
-      REMOVE: "POP",
+      "♅": "POP",
       ADD: "ADD",
-      SUM: "SUM",
+      '↟': "ADD",
+      COMPACT: "COMPACT",
+      "↟↟": "COMPACT",
       SUB: "SUB",
-      SUBTRACT: "SUB",
+      "↡": "SUB",
       DIV: "DIV",
-      DIVIDE: "DIV",
+      "↞": "DIV",
       DIVINT: "DIVINT",
-      DIVIDEINT: "DIVINT",
+      "↞↞": "DIVINT",
       MOD: "MOD",
-      MODULUS: "MOD",
+      "↡↞": "MOD",
       MUL: "MUL",
-      MULTIPLY: "MUL",
+      "↠": "MUL",
+      EXP: "EXP",
+      "↠↠": "EXP",
       SWAP: "SWAP",
-      EXCHANGE: "SWAP",
+      "↡↟": "SWAP",
       EMPTY: "EMPTY",
-      CLEAR: "EMPTY",
+      "𒌐": "EMPTY",
       PRINT: "PRINT",
-      DISPLAY: "PRINT",
+      "♅♅": "PRINT",
     };
 
     const operation = aliases[op];
