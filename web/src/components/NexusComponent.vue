@@ -6,16 +6,30 @@
   import ValkyrieVM from "../../../vm.mjs"
   const vm = new ValkyrieVM();
 
-  vm.execute("PRINT \"Hola desde ValkyrieVM!\"")
+  vm.execute("PRINT \"ValkyrieVM\"")
 
   const stackNumber = ref(8); // No cambiar de 8, no se ve bonito en la interfaz
   const stacks = ref(Array(stackNumber.value).fill(null));
 
   const lineEditor = ref();
-  const fullText = ref('PUSH $1 10\nPUSH $1 23\nPUSH $1 3\nPRINT $1\nCOMPACT $1\nPRINT $1');
   const currentLine = ref(0);
 
-  const outputText = ref('Hola Mundo!');
+  const props = defineProps({
+    modelValue: {
+      type: String,
+      default: '',
+    },
+    delay: {
+      type: Number,
+      default: 500,
+    },
+  });
+
+  const outputText = ref('');
+  const outputTextElement = ref(null);
+  
+  const emit = defineEmits(['update:modelValue', "startRunning", "stopRunning"]);
+
 
   onMounted(() => {
     stacks.value = stacks.value.filter(ref => ref != null);
@@ -24,35 +38,15 @@
     for (let i = 0; i < stacks.value.length; i++) {
       vm.stacks[stackNames[i]].addEventListener('push', async (value) => {
         stacks.value[i].push(value);
-
-        // Pausa falsa
-        await new Promise((resolve) => {
-          setTimeout(() => {
-            resolve();
-          }, 500);
-        });
       }, true);
 
       vm.stacks[stackNames[i]].addEventListener('pop', async (value) => {
         stacks.value[i].pop();
-
-        // Pausa falsa
-        await new Promise((resolve) => {
-          setTimeout(() => {
-            resolve();
-          }, 500);
-        });
       }, true);
 
       vm.addEventListener('print', async (value) => {
+        outputTextElement.value?.classList.remove('error');
         outputText.value = value;
-
-        // Pausa falsa
-        await new Promise((resolve) => {
-          setTimeout(() => {
-            resolve();
-          }, 500);
-        });
       }, true)
     }
   });
@@ -73,19 +67,40 @@
 
   const nuke = () => {
     var stackNames = Object.keys(vm.stacks);
-    stackNames.forEach((stackName, index) => {
-      vm.stacks[stackName].clear();
+    stackNames.forEach(async (stackName, index) => {
+      await vm.stacks[stackName].clear();
     });
   };
 
+  const running = ref(false);
   const runAll = async () => {
-    var commands = fullText.value.split('\n')
+    var commands = props.modelValue.split('\n')
+    running.value = true;
+    emit("startRunning");
 
     for (let i = 0; i < commands.length; i++) {
       currentLine.value = i;
-      await vm.execute(commands[i]);
+
+      try {
+        await vm.execute(commands[i]);
+      } catch (error) {
+        outputText.value = error.message;
+        outputTextElement.value?.classList.add('error');
+        break;
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, props.delay));
     }
+
+    running.value = false;
+    emit("stopRunning");
   }
+
+  
+  defineExpose({
+    runAll,
+    nuke
+  }) 
 </script>
 
 <template>
@@ -104,20 +119,22 @@
     <div class="lineEditor">
       <LineEditor
         ref="lineEditor"
-        v-model="fullText"
-        v-model:current-line-index="currentLine"
+        v-model="props.modelValue"
+        @update:model-value="emit('update:modelValue', $event)"
+        :current-line-index="currentLine"
+        @update:current-line-index="currentLine = $event"
       />
     </div>
 
-    <p class="outputText">{{ outputText }}</p>
+    <p class="outputText" ref="outputTextElement">{{ outputText }}</p>
 
-    <div class="global-controls" style="z-index: 1;">
+    <!-- <div class="global-controls" style="z-index: 1;">
       <button @click="pushAll">Push All</button>
       <button @click="popAll">Pop All</button>
       <button @click="nuke">Nuke</button>
       <button @click="runAll">Run All</button>
-      <textarea name="" id="" cols="30" rows="10" v-model="fullText"></textarea>
-    </div>
+      <textarea name="" id="" cols="30" rows="10" v-model="props.modelValue" @update:model-value="emit('update:modelValue', $event)"></textarea>
+    </div> -->
   </div>
 </template>
 
@@ -187,7 +204,7 @@
     font-family: monospace;
     font-size: 20px;
     position: absolute;
-    bottom: 380px;
+    top: 600px;
     display: flex;
     justify-content: center;
     align-items: center;

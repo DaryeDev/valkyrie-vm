@@ -1,18 +1,11 @@
 <template>
-    <button @click="emit('start')" title="Start" :disabled="isRunning">
-        <ion-icon name="play"></ion-icon>
+    <button @click="emit('newScript')" title="New Script">
+        <ion-icon name="egg"></ion-icon>
     </button>
 </template>
 
 <script setup>
-    const emit = defineEmits(["start"]);
-
-    const props = defineProps({
-        isRunning: {
-            type: Boolean,
-            default: false,
-        },
-    });
+    const emit = defineEmits(["newScript"]);
 </script>
 
 <style scoped lang="postcss">
@@ -29,11 +22,6 @@
         ion-icon {
             color: white;
             font-size: 24px;
-        }
-
-        &:disabled {
-            background-color: #ccc;
-            cursor: not-allowed;
         }
 
         &:hover {
