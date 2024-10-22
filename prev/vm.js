@@ -15,7 +15,6 @@ class ValkyrieVM {
       $7: new Stack(),
       $B: new Stack(),
     };
-    this.registers = {};
   }
 
   getValue(arg, pop = false) {
