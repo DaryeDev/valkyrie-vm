@@ -28,3 +28,30 @@ PRINT $3
 𖤍 $3 2
 ↠↠ $3 4
 ♅♅ $3
+
+PUSH $1 10
+PUSH $2 0
+
+IF $1
+  PUSH $2 1
+  ADD $2 1
+ELSE
+  PUSH $2 2
+ENDIF
+
+PUSH $3 5
+
+WHILE $3 1 = 1
+  PUSH $2 1
+  ADD $2 1
+  SUB $3 1
+ENDWHILE
+
+PUSH $4 3
+
+FOR $4 13
+  PUSH $2 1
+  ADD $2 1
+ENDFOR
+
+PRINT $2
