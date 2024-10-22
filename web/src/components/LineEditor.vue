@@ -70,6 +70,13 @@ watch(
   }
 );
 
+watch(
+  () => props.currentLineIndex,
+  (newValue) => {
+    currentIndex.value = newValue;
+  }
+);
+
 function goUp() {
   currentIndex.value = currentIndex.value - 1;
 }

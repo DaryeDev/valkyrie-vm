@@ -1,7 +1,5 @@
-import Stack from "./stack.js";
+import Stack from "./stack.mjs";
 import fs from "fs";
-import path from "path";
-import { fileURLToPath } from "url";
 
 class ValkyrieVM {
   constructor() {
@@ -15,15 +13,19 @@ class ValkyrieVM {
       $7: new Stack(),
       $B: new Stack(),
     };
+
+    this.eventListeners = {
+      "print": [],
+    };
   }
 
-  getValue(arg, pop = false) {
+  async getValue(arg, pop = false) {
     if (arg.startsWith('"') && arg.endsWith('"')) {
       return arg.slice(1, -1);
     } else if (!isNaN(Number(arg))) {
       return Number(arg);
     } else if (arg.startsWith("$")) {
-      return pop ? this.stacks[arg].pop() : this.stacks[arg].peek();
+      return pop ? await this.stacks[arg].pop() : await this.stacks[arg].peek();
     }
   }
 
@@ -31,7 +33,7 @@ class ValkyrieVM {
     return arg.startsWith("$") && Object.keys(this.stacks).includes(arg);
   }
 
-  execute(instruction) {
+  async execute(instruction) {
     const parts = instruction.trim().split(/\s+/);
     const op = parts[0];
     var args = parts.slice(1);
@@ -56,9 +58,9 @@ class ValkyrieVM {
     }
 
     const operations = {
-      PUSH: (args) => {
+      PUSH: async (args) => {
         var to = args[0];
-        var value = this.getValue(args[1]);
+        var value = await this.getValue(args[1]);
 
         if (!this.isStackReference(to)) {
           throw new Error(`Invalid stack reference: ${to}.`);
@@ -68,27 +70,27 @@ class ValkyrieVM {
           throw new Error("PUSH operation requires a value to push");
         }
 
-        this.stacks[to].push(value);
+        await this.stacks[to].push(value);
       },
-      POP: (args) => {
+      POP: async (args) => {
         var to = args[0];
 
         if (!this.isStackReference(to)) {
           throw new Error(`Invalid stack reference: ${to}.`);
         }
 
-        this.stacks[to].push(value);
+        await this.stacks[to].push(value);
       },
-      ADD: (args) => {
+      ADD: async (args) => {
         var to, value, delta;
         if (args.length == 3) {
           to = args[0];
-          value = this.getValue(args[1]);
-          delta = this.getValue(args[2]);
+          value = await this.getValue(args[1]);
+          delta = await this.getValue(args[2]);
         } else if (args.length >= 2) {
           to = args[0];
-          value = this.getValue(args[0]);
-          delta = this.getValue(args[1]);
+          value = await this.getValue(args[0]);
+          delta = await this.getValue(args[1]);
         } else {
           throw new Error("ADD operation requires at least two arguments.");
         }
@@ -97,18 +99,18 @@ class ValkyrieVM {
           throw new Error(`Invalid stack reference: ${to}.`);
         }
 
-        this.stacks[to].push(value + delta);
+        await this.stacks[to].push(value + delta);
       },
-      SUB: (args) => {
+      SUB: async (args) => {
         var to, value, delta;
         if (args.length == 3) {
           to = args[0];
-          value = this.getValue(args[1]);
-          delta = this.getValue(args[2]);
+          value = await this.getValue(args[1]);
+          delta = await this.getValue(args[2]);
         } else if (args.length >= 2) {
           to = args[0];
-          value = this.getValue(args[0]);
-          delta = this.getValue(args[1]);
+          value = await this.getValue(args[0]);
+          delta = await this.getValue(args[1]);
         } else {
           throw new Error("SUB operation requires at least two arguments.");
         }
@@ -134,21 +136,21 @@ class ValkyrieVM {
         }
 
         if (typeof value === "string") {
-          this.stacks[to].push(value.replace(delta, ""));
+          await this.stacks[to].push(value.replace(delta, ""));
         } else {
-          this.stacks[to].push(value - delta);
+          await this.stacks[to].push(value - delta);
         }
       },
-      DIV: (args) => {
+      DIV: async (args) => {
         var to, value, divisor;
         if (args.length == 3) {
           to = args[0];
-          value = this.getValue(args[1]);
-          divisor = this.getValue(args[2]);
+          value = await this.getValue(args[1]);
+          divisor = await this.getValue(args[2]);
         } else {
           to = args[0];
-          value = this.getValue(args[0]);
-          divisor = this.getValue(args[1]);
+          value = await this.getValue(args[0]);
+          divisor = await this.getValue(args[1]);
         }
         if (!this.isStackReference(to)) {
           throw new Error(`Invalid stack reference: ${to}.`);
@@ -167,18 +169,18 @@ class ValkyrieVM {
             `Cannot divide ${typeof value} by ${typeof divisor}.`
           );
         }
-        this.stacks[to].push(value / divisor);
+        await this.stacks[to].push(value / divisor);
       },
-      DIVINT: (args) => {
+      DIVINT: async (args) => {
         var to, value, divisor;
         if (args.length == 3) {
           to = args[0];
-          value = this.getValue(args[1]);
-          divisor = this.getValue(args[2]);
+          value = await this.getValue(args[1]);
+          divisor = await this.getValue(args[2]);
         } else {
           to = args[0];
-          value = this.getValue(args[0]);
-          divisor = this.getValue(args[1]);
+          value = await this.getValue(args[0]);
+          divisor = await this.getValue(args[1]);
         }
         if (!this.isStackReference(to)) {
           throw new Error(`Invalid stack reference: ${to}.`);
@@ -197,18 +199,18 @@ class ValkyrieVM {
             `Cannot divide ${typeof value} by ${typeof divisor}.`
           );
         }
-        this.stacks[to].push(Math.trunc(value / divisor));
+        await this.stacks[to].push(Math.trunc(value / divisor));
       },
-      MOD: (args) => {
+      MOD: async (args) => {
         var to, value, divisor;
         if (args.length == 3) {
           to = args[0];
-          value = this.getValue(args[1]);
-          divisor = this.getValue(args[2]);
+          value = await this.getValue(args[1]);
+          divisor = await this.getValue(args[2]);
         } else {
           to = args[0];
-          value = this.getValue(args[0]);
-          divisor = this.getValue(args[1]);
+          value = await this.getValue(args[0]);
+          divisor = await this.getValue(args[1]);
         }
         if (!this.isStackReference(to)) {
           throw new Error(`Invalid stack reference: ${to}.`);
@@ -227,18 +229,18 @@ class ValkyrieVM {
             `Cannot divide ${typeof value} by ${typeof divisor}.`
           );
         }
-        this.stacks[to].push(value % divisor);
+        await this.stacks[to].push(value % divisor);
       },
-      MUL: (args) => {
+      MUL: async (args) => {
         var to, value, multiple;
         if (args.length == 3) {
           to = args[0];
-          value = this.getValue(args[1]);
-          multiple = this.getValue(args[2]);
+          value = await this.getValue(args[1]);
+          multiple = await this.getValue(args[2]);
         } else {
           to = args[0];
-          value = this.getValue(args[0]);
-          multiple = this.getValue(args[1]);
+          value = await this.getValue(args[0]);
+          multiple = await this.getValue(args[1]);
         }
         if (!this.isStackReference(to)) {
           throw new Error(`Invalid stack reference: ${to}.`);
@@ -262,25 +264,25 @@ class ValkyrieVM {
           );
         }
         if (typeof value === "string") {
-          this.stacks[to].push(value.repeat(multiple));
+          await this.stacks[to].push(value.repeat(multiple));
         } else if (typeof multiple === "string") {
           throw new Error(
             `Cannot multiply ${typeof value} by ${typeof multiple}.`
           );
         } else {
-          this.stacks[to].push(Number(value) * Number(multiple));
+          await this.stacks[to].push(Number(value) * Number(multiple));
         }
       },
-      EXP: (args) => {
+      EXP: async (args) => {
         var to, value, exponent;
         if (args.length == 3) {
           to = args[0];
-          value = this.getValue(args[1]);
-          exponent = this.getValue(args[2]);
+          value = await this.getValue(args[1]);
+          exponent = await this.getValue(args[2]);
         } else {
           to = args[0];
-          value = this.getValue(args[0]);
-          exponent = this.getValue(args[1]);
+          value = await this.getValue(args[0]);
+          exponent = await this.getValue(args[1]);
         }
         if (!this.isStackReference(to)) {
           throw new Error(`Invalid stack reference: ${to}.`);
@@ -301,10 +303,10 @@ class ValkyrieVM {
             `Cannot multiply ${typeof value} by ${typeof exponent}.`
           );
         } else {
-          this.stacks[to].push(Number(value) ** Number(exponent));
+          await this.stacks[to].push(Number(value) ** Number(exponent));
         }
       },
-      SWAP: (args) => {
+      SWAP: async (args) => {
         var stack1 = args[0];
         var stack2 = args[1];
 
@@ -316,24 +318,30 @@ class ValkyrieVM {
           throw new Error(`Invalid stack reference: ${stack1}.`);
         }
 
-        this.stacks["$B"].push(this.stacks[stack1].pop());
-        this.stacks[stack1].push(this.getValue(stack2, true));
+        await this.stacks["$B"].push(await this.stacks[stack1].pop());
+        await this.stacks[stack1].push(await this.getValue(stack2, true));
         if (this.isStackReference(stack2)) {
-          this.stacks[stack2].push(this.stacks["$B"].pop());
+          await this.stacks[stack2].push(await this.stacks["$B"].pop());
         } else {
-          this.stacks["$B"].pop();
+          await this.stacks["$B"].pop();
         }
       },
-      PRINT: (args) => {
+      PRINT: async (args) => {
         const arg = args[0];
 
         if (!arg) {
           throw new Error("PRINT operation requires an argument.");
         }
 
-        console.log(this.getValue(arg));
+        var value = await this.getValue(arg);
+
+        console.log(value);
+
+        await Promise.all(
+          this.eventListeners["print"].map((callback) => callback(value))
+        );
       },
-      CLEAR: (args) => {
+      CLEAR: async (args) => {
         var stack = args[0];
 
         if (!this.isStackReference(stack)) {
@@ -342,10 +350,10 @@ class ValkyrieVM {
 
         while (!this.stacks[stack].isEmpty()) {
           //Clear stack
-          this.stacks[stack].pop();
+          await this.stacks[stack].pop();
         }
       },
-      COMPACT: (args) => {
+      COMPACT: async (args) => {
         var stack = args[0];
         var targetStack = this.stacks[stack];
 
@@ -360,25 +368,25 @@ class ValkyrieVM {
         while (!targetStack.isEmpty()) {
           //Clear stack
           if (
-            typeof targetStack.peek() !== "number" &&
-            typeof targetStack.peek() !== "string"
+            typeof await targetStack.peek() !== "number" &&
+            typeof await targetStack.peek() !== "string"
           ) {
             throw new Error(`Stack ${stack} contains non-numeric values.`);
           }
           if (sum === undefined) {
-            sum = targetStack.pop();
+            sum = await targetStack.pop();
           } else {
-            sum += targetStack.pop();
+            sum += await targetStack.pop();
           }
         }
 
-        targetStack.push(sum); //push result
+        await targetStack.push(sum); //push result
       },
-      RANDINT: (args) => {
+      RANDINT: async (args) => {
         var stack = args[0];
-        var min = this.getValue(args[1]);
-        var max = this.getValue(args[2]);
-        
+        var min = await this.getValue(args[1]);
+        var max = await this.getValue(args[2]);
+
         if (!this.isStackReference(stack)) {
           throw new Error(`Invalid stack reference: ${stack}.`);
         }
@@ -395,59 +403,107 @@ class ValkyrieVM {
           throw new Error("RANDINT operation requires min < max.");
         }
 
-        this.stacks[stack].push(Math.floor(Math.random() * (max - min + 1)) + min);
+        await this.stacks[stack].push(Math.floor(Math.random() * (max - min + 1)) + min);
       },
-      CLEARALL: (args) => {
+      CLEARALL: async (args) => {
         for (const stack in this.stacks) {
           while (!stack.isEmpty()) {
-            stack.pop();
+            await stack.pop();
           }
         }
       }
     };
 
-    const aliases = {
-      // Add aliases for instructions in a dictionary to map to runes
-      PUSH: "PUSH",
-      "𖤍": "PUSH",
-      POP: "POP",
-      "♅": "POP",
-      ADD: "ADD",
-      '↟': "ADD",
-      COMPACT: "COMPACT",
-      "↟↟": "COMPACT",
-      SUB: "SUB",
-      "↡": "SUB",
-      DIV: "DIV",
-      "↞": "DIV",
-      DIVINT: "DIVINT",
-      "↞↞": "DIVINT",
-      MOD: "MOD",
-      "↡↞": "MOD",
-      MUL: "MUL",
-      "↠": "MUL",
-      EXP: "EXP",
-      "↠↠": "EXP",
-      SWAP: "SWAP",
-      "↡↟": "SWAP",
-      EMPTY: "EMPTY",
-      "𒌐": "EMPTY",
-      CLEARALL: "CLEARALL",
-      NUKE: "CLEARALL",
-      RAGNAROK: "CLEARALL",
-      "𒌐𒌐": "CLEARALL",
-      PRINT: "PRINT",
-      "♅♅": "PRINT",
-      RANDINT: "RANDINT",
-      "𖤍𖤍": "RANDINT",
-    };
-
-    const operation = aliases[op];
-    if (operation && operations[operation]) {
-      operations[operation](args);
-    } else {
-      console.error(`Unknown instruction: ${op}`);
+    const aliasesDictionary = {
+      PUSH: [
+        "PUSH",
+        "𖤍",
+      ],
+      POP: [
+        "POP",
+        "♅",
+      ],
+      ADD: [
+        "ADD",
+        "↟",
+      ],
+      COMPACT: [
+        "COMPACT",
+        "↟↟"
+      ],
+      SUB: [
+        "SUB",
+        "↡",
+      ],
+      DIV: [
+        "DIV",
+        "↞",
+      ],
+      DIVINT: [
+        "DIVINT",
+        "↞↞",
+      ],
+      MOD: [
+        "MOD",
+        "↡↞",
+      ],
+      MUL: [
+        "MUL",
+        "↠",
+      ],
+      EXP: [
+        "EXP",
+        "↠↠",
+      ],
+      SWAP: [
+        "SWAP",
+        "↡↟",
+      ],
+      EMPTY: [
+        "EMPTY",
+        "𒌐",
+      ],
+      CLEARALL: [
+        "CLEARALL",
+        "NUKE",
+        "RAGNAROK",
+        "𒌐𒌐",
+      ],
+      PRINT: [
+        "PRINT",
+        "♅♅",
+      ],
+      RANDINT: [
+        "RANDINT",
+        "𖤓☽",
+      ],
     }
+
+    function getOperationByAlias(alias) {
+      for (const [key, values] of Object.entries(aliasesDictionary)) {
+        if (values.includes(alias)) {
+            return key;
+        }
+      }
+    }
+
+    const operation = getOperationByAlias(op);
+    if (operation && operations[operation]) {
+      await operations[operation](args);
+    } else {
+      throw new Error(`Unknown instruction: ${op}`);
+    }
+  }
+
+  addEventListener(type, callback = async (value) => {}, wait=false) {
+    var waitedCallback = async (value) => {
+      if (wait) {
+        await callback(value);
+      } else {
+        callback(value);
+      }
+    }
+    this.eventListeners[type].push(waitedCallback);
   }
 
   readInstructionsFromFile(filePath) {
@@ -465,23 +521,17 @@ class ValkyrieVM {
   }
 }
 
-// Example usage:
-const vm = new ValkyrieVM();
-// vm.execute("PUSH 10");
-// vm.execute("PUSH 20");
-// vm.execute("ADD");
-// vm.execute("PRINT"); // Should print 30
-
-// Execute instructions from a .val file or execute all .val files in the directory
-if (process.argv.length > 2 && process.argv[2].trim()) {
+if (typeof process !== 'undefined' && process.argv.length > 2 && process.argv[2].trim()) {
   const filePath = process.argv[2];
+
+  // Example usage:
+  const vm = new ValkyrieVM();
+  // vm.execute("PUSH $1 10");
+  // vm.execute("PUSH $2 20");
+  // vm.execute("ADD $3 $1 $2");
+  // vm.execute("PRINT $3"); // Should print 30
+
   vm.run(filePath); // This will read and execute all instructions from the file
-} else {
-  const __filename = fileURLToPath(import.meta.url);
-  const directory = path.dirname(__filename);
-  const valFiles = vm.findValFiles(directory);
-  valFiles.forEach((fileName) => {
-    const filePath = path.join(directory, fileName);
-    vm.run(filePath); // For each .val file, read and execute the instructions
-  });
 }
+
+export default ValkyrieVM;

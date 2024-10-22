@@ -1,5 +1,5 @@
 <template>
-  <div class="stack" :style="{ '--rotation': rotation+'deg', '--counterrotation': (360 - rotation)+'deg', '--pushAnimation': getTranslateString(rotation), '--popAnimation': getTranslateString(-rotation) }"  @click="dcmnt.execCommand('insertText', false, `${separatorText}`)">
+  <div class="stack" :style="{ '--rotation': rotation+'deg', '--counterrotation': (360 - rotation)+'deg', '--pushAnimation': getTranslateString(rotation), '--popAnimation': getTranslateString(rotation+180) }"  @click="dcmnt.execCommand('insertText', false, `${separatorText}`)">
     <transition-group name="stack-anim">
       <div v-if="stackItems.length > 0" key="first-item" class="stack-item first-item">
         {{ stackItems[0].value }}
@@ -34,9 +34,7 @@ const props = defineProps({
   }
 });
 
-const stackItems = ref([
-  { id: 1, value: 1 }
-]);
+const stackItems = ref([]);
 const lastOperation = ref('');
 let nextId = stackItems.value.length + 1;
 
@@ -86,8 +84,8 @@ const getTranslateString = (rotation) => {
   return `translateY(${y}px) translateX(${x}px)`;
 };
 
-const push = () => {
-  const newItem = { id: nextId++, value: Math.floor(Math.random() * 9) + 1 };
+const push = (value) => {
+  const newItem = { id: nextId++, value: value };
   stackItems.value.unshift(newItem);
   lastOperation.value = `Pushed: ${newItem.value}`;
 };
