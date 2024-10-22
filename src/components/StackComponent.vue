@@ -1,5 +1,5 @@
 <template>
-  <div class="stack" :style="{ '--rotation': rotation+'deg', '--counterrotation': (360 - rotation)+'deg' }">
+  <div class="stack" :style="{ '--rotation': rotation+'deg', '--counterrotation': (360 - rotation)+'deg', '--pushAnimation': getTranslateString(rotation), '--popAnimation': getTranslateString(-rotation) }"  @click="dcmnt.execCommand('insertText', false, `${separatorText}`)">
     <transition-group name="stack-anim">
       <div v-if="stackItems.length > 0" key="first-item" class="stack-item first-item">
         {{ stackItems[0].value }}
@@ -20,12 +20,13 @@
 </template>
 
 <script setup>
+const dcmnt = document;
 import { ref } from 'vue';
 
 const props = defineProps({
   separatorText: {
     type: String,
-    default: '$5'
+    default: ''
   },
   rotation: {
     type: Number,
@@ -39,8 +40,54 @@ const stackItems = ref([
 const lastOperation = ref('');
 let nextId = stackItems.value.length + 1;
 
+function getCoordinatesFromAngle(angle) {
+    // Asegurarse de que el ángulo esté en el rango de 0 a 360
+    angle = angle % 360;
+    if (angle < 0) angle += 360;
+
+    // Definir las coordenadas correspondientes a cada ángulo predefinido
+    const coordinates = [
+        { angle: 0, x: 0, y: -20 },
+        { angle: 45, x: 20, y: -20 },
+        { angle: 90, x: 20, y: 0 },
+        { angle: 135, x: 20, y: 20 },
+        { angle: 180, x: 0, y: 20 },
+        { angle: 225, x: -20, y: 20 },
+        { angle: 270, x: -20, y: 0 },
+        { angle: 315, x: -20, y: -20 }
+    ];
+
+    // Función para interpolar entre dos puntos
+    function interpolate(point1, point2, t) {
+        const x = point1.x + (point2.x - point1.x) * t;
+        const y = point1.y + (point2.y - point1.y) * t;
+        return { x, y };
+    }
+
+    // Encontrar los dos puntos entre los cuales se encuentra el ángulo dado
+    for (let i = 0; i < coordinates.length; i++) {
+        const currentPoint = coordinates[i];
+        const nextPoint = coordinates[(i + 1) % coordinates.length];
+        
+        if (angle >= currentPoint.angle && angle <= nextPoint.angle) {
+            // Calcular el factor de interpolación t
+            const t = (angle - currentPoint.angle) / (nextPoint.angle - currentPoint.angle);
+            // Interpolar para encontrar el punto en el ángulo dado
+            return interpolate(currentPoint, nextPoint, t);
+        }
+    }
+
+    // Si el ángulo es exactamente 0 o 360, devolver el punto correspondiente
+    return coordinates[0];
+}
+
+const getTranslateString = (rotation) => {
+  var { x, y } = getCoordinatesFromAngle(rotation);
+  return `translateY(${y}px) translateX(${x}px)`;
+};
+
 const push = () => {
-  const newItem = { id: nextId++, value: Math.floor(Math.random() * 10) + 1 };
+  const newItem = { id: nextId++, value: Math.floor(Math.random() * 9) + 1 };
   stackItems.value.unshift(newItem);
   lastOperation.value = `Pushed: ${newItem.value}`;
 };
@@ -64,7 +111,6 @@ const peek = () => {
   return null;
 };
 
-
 defineExpose({ 
   push,
   pop,
@@ -75,14 +121,13 @@ defineExpose({
 <style scoped lang="postcss">
 .stack {
   max-width: 200px;
-  margin: 0 auto;
   text-align: center;
   width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 20px 0;
   transform: rotate(var(--rotation));
+  user-select: none;
 }
 
 .stack-item {
@@ -148,12 +193,12 @@ defineExpose({
 
 .stack-anim-enter-from {
   opacity: 0;
-  transform: translateY(-20px);
+  transform: var(--pushAnimation);
 }
 
 .stack-anim-leave-to {
   opacity: 0;
-  transform: translateY(20px);
+  transform: var(--popAnimation);
 }
 
 </style>
