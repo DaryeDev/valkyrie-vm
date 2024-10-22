@@ -1,8 +1,11 @@
 <template>
-  <div class="stack" :class="{ 'reverse': reverse }">
+  <div class="stack" :style="{ '--rotation': rotation+'deg', '--counterrotation': (360 - rotation)+'deg' }">
     <transition-group name="stack-anim">
-      <div v-if="stackItems.length > 0" key="first-item" class="stack-item first-item" :class="{ 'reverse': reverse }">
+      <div v-if="stackItems.length > 0" key="first-item" class="stack-item first-item">
         {{ stackItems[0].value }}
+      </div>
+      <div v-else class="stack-item first-item">
+        &nbsp;
       </div>
       <div key="separator" class="separator">
         <div class="line"></div>
@@ -24,21 +27,17 @@ const props = defineProps({
     type: String,
     default: '$5'
   },
-  reverse: {
-    type: Boolean,
-    default: false
+  rotation: {
+    type: Number,
+    default: 0
   }
 });
 
 const stackItems = ref([
-  { id: 1, value: 1 },
-  { id: 2, value: 1 },
-  { id: 3, value: 1 },
-  { id: 4, value: 1 },
-  { id: 5, value: 1 }
+  { id: 1, value: 1 }
 ]);
 const lastOperation = ref('');
-let nextId = 6;
+let nextId = stackItems.value.length + 1;
 
 const push = () => {
   const newItem = { id: nextId++, value: Math.floor(Math.random() * 10) + 1 };
@@ -73,7 +72,7 @@ defineExpose({
 })
 </script>
 
-<style scoped lang="scss">
+<style scoped lang="postcss">
 .stack {
   max-width: 200px;
   margin: 0 auto;
@@ -83,15 +82,14 @@ defineExpose({
   flex-direction: column;
   align-items: center;
   padding: 20px 0;
-}
-
-.stack.reverse {
-  flex-direction: column-reverse;
+  transform: rotate(var(--rotation));
 }
 
 .stack-item {
   margin: 5px 0;
   transition: transform 0.3s ease;
+  rotate: var(--counterrotation);
+  z-index: 1;
 }
 
 .first-item {
@@ -127,6 +125,7 @@ defineExpose({
   padding: 0 10px;
   font-size: 24px;
   font-weight: 150;
+  rotate: var(--counterrotation);
 }
 
 .stack-anim-move {
@@ -152,17 +151,9 @@ defineExpose({
   transform: translateY(-20px);
 }
 
-.stack.reverse .stack-anim-enter-from {
-  transform: translateY(20px);
-}
-
 .stack-anim-leave-to {
   opacity: 0;
   transform: translateY(20px);
-}
-
-.stack.reverse .stack-anim-leave-to {
-  transform: translateY(-20px);
 }
 
 </style>

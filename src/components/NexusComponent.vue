@@ -6,7 +6,7 @@
         :key="index"
         :ref="el => { if (el) stackRefs[index] = el }"
         :separatorText="`$${index + 1}`"
-        :reverse="index % 2 === 0"
+        :rotation="[180, 225, 270, 315, 0, 45, 90, 135][index % 8]"
       />
     </div>
     <div class="global-controls">
