@@ -324,12 +324,6 @@ class ValkyrieVM {
           this.stacks["$B"].pop();
         }
       },
-      EMPTY: (args) => {
-        var stack = args[0];
-        while (!this.stacks[stack].isEmpty()) {
-          this.stacks[stack].pop();
-        }
-      },
       PRINT: (args) => {
         const arg = args[0];
 
@@ -380,6 +374,36 @@ class ValkyrieVM {
 
         targetStack.push(sum); //push result
       },
+      RANDINT: (args) => {
+        var stack = args[0];
+        var min = this.getValue(args[1]);
+        var max = this.getValue(args[2]);
+        
+        if (!this.isStackReference(stack)) {
+          throw new Error(`Invalid stack reference: ${stack}.`);
+        }
+
+        if (!min || !max) {
+          throw new Error("RANDINT operation requires two operands.");
+        }
+
+        if (typeof min !== "number" || typeof max !== "number") {
+          throw new Error("RANDINT operation requires numeric operands.");
+        }
+
+        if (min >= max) {
+          throw new Error("RANDINT operation requires min < max.");
+        }
+
+        this.stacks[stack].push(Math.floor(Math.random() * (max - min + 1)) + min);
+      },
+      CLEARALL: (args) => {
+        for (const stack in this.stacks) {
+          while (!stack.isEmpty()) {
+            stack.pop();
+          }
+        }
+      }
     };
 
     const aliases = {
@@ -408,8 +432,13 @@ class ValkyrieVM {
       "↡↟": "SWAP",
       EMPTY: "EMPTY",
       "𒌐": "EMPTY",
+      CLEARALL: "CLEARALL",
+      NUKE: "CLEARALL",
+      "𒌐𒌐": "CLEARALL",
       PRINT: "PRINT",
       "♅♅": "PRINT",
+      RANDINT: "RANDINT",
+      "𖤍𖤍": "RANDINT",
     };
 
     const operation = aliases[op];
