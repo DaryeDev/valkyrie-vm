@@ -434,6 +434,7 @@ class ValkyrieVM {
       "𒌐": "EMPTY",
       CLEARALL: "CLEARALL",
       NUKE: "CLEARALL",
+      RAGNAROK: "CLEARALL",
       "𒌐𒌐": "CLEARALL",
       PRINT: "PRINT",
       "♅♅": "PRINT",
