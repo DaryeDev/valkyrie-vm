@@ -282,6 +282,39 @@ class ValkyrieVM {
 
         console.log(this.getValue(arg));
       },
+      CLEAR: (args) => {
+        var stack = args[0];
+
+        if (!this.isStackReference(stack)) {
+          throw new Error(`Invalid stack reference: ${stack}.`);
+        }
+
+        while (!this.stacks[stack].isEmpty()) { //Clear stack
+          this.stacks[stack].pop();
+        }
+      },
+      SUM: (args) => {
+        var stack = args[0];
+        var targetStack = this.stacks[stack]
+
+        if (!this.isStackReference(stack)) {
+          throw new Error(`Invalid stack reference: ${stack}.`);
+        }
+        if (targetStack.isEmpty()) {
+          throw new Error(`Stack ${stack} is empty.`);
+        }
+
+
+        var sum = 0;
+        while (!targetStack.isEmpty()) { //Clear stack
+          if (typeof targetStack.peek() !== "number") {
+            throw new Error(`Stack ${stack} contains non-numeric values.`);
+          }
+          sum = sum + targetStack.pop();
+        }
+
+        targetStack.push(sum); //push result
+      }
     };
 
     const aliases = { // Add aliases for instructions in a dictionary to map to runes
@@ -290,7 +323,7 @@ class ValkyrieVM {
       POP: "POP",
       REMOVE: "POP",
       ADD: "ADD",
-      SUM: "ADD",
+      SUM: "SUM",
       SUB: "SUB",
       SUBTRACT: "SUB",
       DIV: "DIV",
