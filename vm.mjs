@@ -487,12 +487,15 @@ class ValkyrieVM {
       }
     }
 
-    const operation = getOperationByAlias(op);
-    if (operation && operations[operation]) {
-      await operations[operation](args);
-    } else {
-      throw new Error(`Unknown instruction: ${op}`);
+    if (op) {
+      const operation = getOperationByAlias(op.toUpperCase());
+      if (operation && operations[operation]) {
+        await operations[operation](args);
+      } else {
+        throw new Error(`Unknown instruction: ${op}`);
+      }
     }
+    
   }
 
   addEventListener(type, callback = async (value) => {}, wait=false) {
