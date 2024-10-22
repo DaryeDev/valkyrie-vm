@@ -8,6 +8,7 @@
   import StartStopButton from './components/buttons/StartStopButton.vue';
   import CleanButton from './components/buttons/cleanButton.vue';
   import newScriptButton from './components/buttons/newScriptButton.vue';
+  import DelaySlider from './components/buttons/DelaySlider.vue';
 
   const text = ref('');
   const delay = ref(500);
@@ -26,6 +27,8 @@
     <newScriptButton @newScript="text = ''"/>
     <StartStopButton :isRunning="isRunning" @start="nexusComponentElement.runAll()" @stop="isRunning = false"/>
   </div>
+
+  <DelaySlider class="delay-slider" :delay="delay" @update:delay="newDelay => delay = newDelay"/>
 </template>
 
 <style scoped>
@@ -36,5 +39,11 @@
     display: flex;
     gap: 10px;
     flex-direction: column;
+  }
+
+  .delay-slider {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
   }
 </style>
