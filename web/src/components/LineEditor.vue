@@ -57,7 +57,7 @@ const currentIndex = computed({
         
         setTimeout(() => {
           currentLineRef.value?.lastElementChild?.focus();
-        }, 150);
+        }, 200);
       });
     }
   },
