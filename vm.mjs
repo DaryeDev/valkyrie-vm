@@ -494,7 +494,7 @@ class ValkyrieVM {
       }
     }
 
-    if (op) {
+    if (op && op !== "" && op !== "#") {
       const operation = getOperationByAlias(op.toUpperCase());
       if (operation && operations[operation]) {
         await operations[operation](args);
