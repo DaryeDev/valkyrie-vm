@@ -144,8 +144,8 @@
 <style scoped lang="postcss">
   .nexusWrapper {
     font-family: 'Inter', sans-serif;
-    width: 100vw;
-    height: 100vh;
+    min-width: 800px;
+    min-height: 800px;
     margin: 0;
     display: flex;
     justify-content: center;
