@@ -1,0 +1,16 @@
+PUSH $1 "Item_A"     # Add "Item_A" to stack $1 (Inventory)
+PUSH $1 "Item_B"     # Add "Item_B" to stack $1
+PUSH $1 "Item_C"     # Add "Item_C" to stack $1
+PRINT $1             # Display current inventory in stack $1
+
+POP $1               # Remove the top item ("Item_C")
+PRINT $1             # Display the remaining items
+
+PUSH $2 "Item_D"     # Add "Item_D" to stack $2
+SWAP $1 $2           # Swap the contents of stack $1 and stack $2
+
+PRINT $1             # Print stack $1 (should show "Item_D")
+PRINT $2             # Print stack $2 (should show remaining items from the original stack $1)
+
+EMPTY $2             # Empty stack $2 (reset inventory to empty state)
+CLEARALL          # Clear all stacks (nuke the inventory)

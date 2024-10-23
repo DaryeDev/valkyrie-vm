@@ -1,0 +1,16 @@
+𖤍 $1 10     # PUSH $1 10
+𖤍 $2 5      # PUSH $2 5
+↠ $1 $2        # MUL $1 $2 (10 * 5 = 50)
+↞↞ $4 $1 2       # DIVINT $4 $1 2 (Integer division of 50 / 2 = 25)
+♅♅ $4        # PRINT $4 (should output 25)
+pause
+
+𖤍 $2 7      # PUSH $2 7
+↟ $5 $2 3         # ADD $5 $2 3 (7 + 3 = 10)
+♅♅ $5        # PRINT $5 (should output 10)
+pause
+
+𖤍 $3 100    # PUSH $3 100
+↞ $3 4       # DIV $3 by 4 (100 / 4 = 25)
+↡ $6 $3 6       # SUB $6 $3 6 (25 - 6 = 19)
+♅♅ $6        # PRINT $6 (should output 19)
