@@ -85,6 +85,8 @@ class ValkyrieVM {
         if (!this.isStackReference(from)) {
           throw new Error(`Invalid stack reference: ${from}.`);
         }
+
+        await this.stacks[from].pop();
       },
       ADD: async (args) => {
         var to, value, delta;
