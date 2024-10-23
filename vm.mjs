@@ -38,28 +38,27 @@ class ValkyrieVM {
     const op = parts[0];
     var rawArgs = parts.slice(1);
 
-    // fix string args
-    let currentArg = "";
+    // fix args
+    let currentStringArg = false;
     var args = [];
+
     for (let i = 0; i < rawArgs.length; i++) {
-      if (currentArg) {
-        currentArg += ` ${rawArgs[i]}`;
+      if (currentStringArg) {
+        currentStringArg += ` ${rawArgs[i]}`;
         if (rawArgs[i].endsWith('"')) {
-          args.push(currentArg);
-          currentArg = "";
+          args.push(currentStringArg);
+          currentStringArg = false;
         }
       } else if (!rawArgs[i]) {
         continue;
       } else if (rawArgs[i].startsWith('"')) {
-        currentArg += rawArgs[i];
+        currentStringArg += rawArgs[i];
       } else if (rawArgs[i].startsWith('#')) {
         break;
       } else {
         args.push(rawArgs[i]);
       }
     }
-
-    debugger
 
     const operations = {
       PUSH: async (args) => {
