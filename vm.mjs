@@ -16,6 +16,7 @@ class ValkyrieVM {
 
     this.eventListeners = {
       "print": [],
+      "pause": [],
     };
   }
 
@@ -413,11 +414,15 @@ class ValkyrieVM {
         await this.stacks[stack].push(Math.floor(Math.random() * (max - min + 1)) + min);
       },
       CLEARALL: async (args) => {
-
         for (let i = 0; i < Object.keys(this.stacks).length; i++) {
           const stack = this.stacks[Object.keys(this.stacks)[i]];
           await stack.clear();
         }
+      },
+      PAUSE: async (args) => {
+        await Promise.all(
+          this.eventListeners["pause"].map((callback) => callback())
+        );
       }
     };
 
@@ -484,6 +489,9 @@ class ValkyrieVM {
       RANDINT: [
         "RANDINT",
         "𖤓☽",
+      ],
+      PAUSE: [
+        "PAUSE"
       ],
     }
 

@@ -52,6 +52,10 @@
         outputTextElement.value?.classList.remove('error');
         outputText.value = value;
       }, true)
+
+      vm.addEventListener('pause', async (value) => {
+        emit("stopRunning");
+      }, true)
     }
   });
 
