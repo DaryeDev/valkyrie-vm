@@ -14,3 +14,6 @@ pause
 ↞ $3 4       # DIV $3 by 4 (100 / 4 = 25)
 ↡ $6 $3 6       # SUB $6 $3 6 (25 - 6 = 19)
 ♅♅ $6        # PRINT $6 (should output 19)
+
+
+  

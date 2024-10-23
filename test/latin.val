@@ -12,5 +12,11 @@ SWAP $1 $2           # Swap the contents of stack $1 and stack $2
 PRINT $1             # Print stack $1 (should show "Item_D")
 PRINT $2             # Print stack $2 (should show remaining items from the original stack $1)
 
+ADD $1 $2
+PRINT $1
+
+MUL $1 2
+PRINT $1
+
 EMPTY $2             # Empty stack $2 (reset inventory to empty state)
 CLEARALL          # Clear all stacks (nuke the inventory)

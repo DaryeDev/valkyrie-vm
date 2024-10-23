@@ -1,0 +1,16 @@
+PUSH $1 10
+PUSH $2 5
+MUL $1 $2
+DIVINT $4 $1 2
+PRINT $4
+pause
+
+PUSH $2 7
+ADD $5 $2 3
+PRINT $5
+pause
+
+PUSH $3 100
+DIV $3 4
+SUB $6 $3 6
+PRINT $6
