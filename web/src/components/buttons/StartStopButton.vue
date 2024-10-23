@@ -1,11 +1,11 @@
 <template>
-    <button @click="emit('start')" title="Start" :disabled="isRunning">
-        <ion-icon name="play"></ion-icon>
+    <button @click="emit(isRunning?'stop':'start')" title="Start">
+        <ion-icon :name="isRunning?'stop':'play'"></ion-icon>
     </button>
 </template>
 
 <script setup>
-    const emit = defineEmits(["start"]);
+    const emit = defineEmits(["start", "stop"]);
 
     const props = defineProps({
         isRunning: {

@@ -1,5 +1,5 @@
 <script setup>
-  import { ref, onMounted } from 'vue';
+  import { ref, onMounted, watch } from 'vue';
   import StackComponent from './StackComponent.vue';
   import LineEditor from './LineEditor.vue';
 
@@ -22,6 +22,10 @@
     delay: {
       type: Number,
       default: 500,
+    },
+    isRunning: {
+      type: Boolean,
+      default: false,
     },
   });
 
@@ -75,27 +79,22 @@
     outputText.value = '';
   };
 
-  const running = ref(false);
   const runAll = async () => {
     var commands = props.modelValue.split('\n')
-    running.value = true;
     emit("startRunning");
 
-    for (let i = 0; i < commands.length; i++) {
-      currentLine.value = i;
-
+    while (currentLine.value < commands.length && props.isRunning) {
       try {
-        await vm.execute(commands[i]);
+        await vm.execute(commands[currentLine.value]);
+        currentLine.value++;
       } catch (error) {
         outputText.value = error.message;
         outputTextElement.value?.classList.add('error');
         break;
       }
-
+      
       await new Promise((resolve) => setTimeout(resolve, props.delay));
     }
-
-    running.value = false;
     emit("stopRunning");
   }
 
@@ -126,7 +125,8 @@
           v-model="props.modelValue"
           @update:model-value="emit('update:modelValue', $event)"
           :current-line-index="currentLine"
-          @update:current-line-index="currentLine = $event"
+          @update:current-line-index="currentLine = $event;"
+          @manualLineMovement="emit('stopRunning');"
         />
       </div>
       <p class="outputText" ref="outputTextElement">{{ outputText }}</p>

@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, onMounted, nextTick } from "vue";
 import NexusComponent from "./components/NexusComponent.vue";
 
 // Import buttons
@@ -81,7 +81,7 @@ onMounted(() => {
 			<SaveButton :text="text" />
 			<LoadButton @load-text="(newText) => (text = newText)" />
 			<newScriptButton @newScript="text = ''" />
-			<StartStopButton :isRunning="isRunning" @start="nexusComponentElement.runAll()" @stop="isRunning = false" />
+			<StartStopButton :isRunning="isRunning" @start="() => {isRunning = true; nextTick(() => nexusComponentElement.runAll())}" @stop="isRunning = false" />
 		</div>
 
 		<DelaySlider class="delay-slider" :delay="delay" @update:delay="(newDelay) => (delay = newDelay)" />

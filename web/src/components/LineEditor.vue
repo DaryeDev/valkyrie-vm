@@ -36,7 +36,7 @@ const props = defineProps({
   },
 });
 
-const emit = defineEmits(["update:modelValue", "update:currentLineIndex"]);
+const emit = defineEmits(["update:modelValue", "update:currentLineIndex", "manualLineMovement"]);
 
 const currentLineRef = ref(null);
 const lines = ref(props.modelValue.split("\n"));
@@ -82,10 +82,12 @@ watch(
 );
 
 function goUp() {
+  emit("manualLineMovement", -1);
   currentIndex.value = currentIndex.value - 1;
 }
 
 function goDown() {
+  emit("manualLineMovement", 1);
   currentIndex.value = currentIndex.value + 1;
 }
 
