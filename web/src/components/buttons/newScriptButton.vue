@@ -1,6 +1,6 @@
 <template>
     <button @click="emit('newScript')" title="New Script">
-        <ion-icon name="egg"></ion-icon>
+        <ion-icon name="document"></ion-icon>
     </button>
 </template>
 

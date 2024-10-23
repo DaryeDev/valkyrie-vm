@@ -1,6 +1,6 @@
 <template>
     <button @click="emit('cleanStacks')" title="Clean Stacks">
-        <ion-icon name="trash"></ion-icon>
+        <ion-icon name="sparkles"></ion-icon>
     </button>
 </template>
 

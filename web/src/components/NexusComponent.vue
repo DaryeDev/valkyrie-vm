@@ -70,6 +70,9 @@
     stackNames.forEach(async (stackName, index) => {
       await vm.stacks[stackName].clear();
     });
+
+    outputTextElement.value?.classList.remove('error');
+    outputText.value = '';
   };
 
   const running = ref(false);
