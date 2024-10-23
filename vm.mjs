@@ -80,13 +80,11 @@ class ValkyrieVM {
         await this.stacks[to].push(value);
       },
       POP: async (args) => {
-        var to = args[0];
+        var from = args[0];
 
-        if (!this.isStackReference(to)) {
-          throw new Error(`Invalid stack reference: ${to}.`);
+        if (!this.isStackReference(from)) {
+          throw new Error(`Invalid stack reference: ${from}.`);
         }
-
-        await this.stacks[to].push(value);
       },
       ADD: async (args) => {
         var to, value, delta;
