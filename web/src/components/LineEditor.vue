@@ -88,11 +88,6 @@ function goDown() {
   currentIndex.value = currentIndex.value + 1;
 }
 
-defineExpose({
-  goUp,
-  goDown,
-});
-
 function interpretScroll(e) {
   e.preventDefault();
   if (e.deltaY > 0) {
