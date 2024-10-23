@@ -119,17 +119,18 @@
         />
     </div>
 
-    <div class="lineEditor">
-      <LineEditor
-        ref="lineEditor"
-        v-model="props.modelValue"
-        @update:model-value="emit('update:modelValue', $event)"
-        :current-line-index="currentLine"
-        @update:current-line-index="currentLine = $event"
-      />
+    <div class="IO">
+      <div class="lineEditor">
+        <LineEditor
+          ref="lineEditor"
+          v-model="props.modelValue"
+          @update:model-value="emit('update:modelValue', $event)"
+          :current-line-index="currentLine"
+          @update:current-line-index="currentLine = $event"
+        />
+      </div>
+      <p class="outputText" ref="outputTextElement">{{ outputText }}</p>
     </div>
-
-    <p class="outputText" ref="outputTextElement">{{ outputText }}</p>
 
     <!-- <div class="global-controls" style="z-index: 1;">
       <button @click="pushAll">Push All</button>
@@ -196,17 +197,27 @@
     }
   }
 
+  .IO {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+  }
+
   .lineEditor {
     display: flex;
-    position: absolute;
     justify-content: center;
     gap: 10px;
+    margin-top: 60px;
   }
 
   .outputText {
     font-family: monospace;
     font-size: 20px;
-    position: absolute;
     top: 600px;
     display: flex;
     justify-content: center;

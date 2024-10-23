@@ -3,7 +3,7 @@
     <div class="editor">
       <div class="lines" ref="linesElement">
         <div
-          v-for="(line, index) in lines"
+          v-for="(line, index) in lines.concat('')"
           :key="index"
           class="line-wrapper"
           :class="{ current: index === currentIndex }"
@@ -39,7 +39,7 @@ const props = defineProps({
 const emit = defineEmits(["update:modelValue", "update:currentLineIndex"]);
 
 const currentLineRef = ref(null);
-const lines = ref(props.modelValue.split("\n").concat(""));
+const lines = ref(props.modelValue.split("\n"));
 const linesElement = ref(null);
 
 const currentIndex = computed({
@@ -70,8 +70,7 @@ onMounted(() => {
 watch(
   () => props.modelValue,
   (newValue) => {
-    lines.value = newValue.split("\n").concat("");
-    currentIndex.value = 0;
+    lines.value = newValue.split("\n");
   }
 );
 
