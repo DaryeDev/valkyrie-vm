@@ -1,6 +1,6 @@
 <template>
   <div class="editor-container" @wheel="interpretScroll" @keydown="handleKeyDown">
-    <div class="editor">
+    <div class="editor" ref="editorElement">
       <div class="lines" ref="linesElement">
         <div
           v-for="(line, index) in lines.concat('')"
@@ -41,6 +41,7 @@ const emit = defineEmits(["update:modelValue", "update:currentLineIndex", "manua
 const currentLineRef = ref(null);
 const lines = ref(props.modelValue.split("\n"));
 const linesElement = ref(null);
+const editorElement = ref(null);
 
 const currentIndex = computed({
   get: () => props.currentLineIndex,
@@ -49,16 +50,6 @@ const currentIndex = computed({
       currentLineRef.value?.lastElementChild?.focus();
       currentLineRef.value?.lastElementChild?.blur();
       emit("update:currentLineIndex", value);
-      nextTick(() => {
-        currentLineRef.value?.scrollIntoView({
-          behavior: "smooth",
-          block: "center",
-        });
-        
-        setTimeout(() => {
-          currentLineRef.value?.lastElementChild?.focus();
-        }, 150);
-      });
     }
   },
 });
@@ -77,7 +68,13 @@ watch(
 watch(
   () => props.currentLineIndex,
   (newValue) => {
-    currentIndex.value = newValue;
+    editorElement.value.scroll(0, newValue * 64);
+  }
+);
+watch(
+  () => currentLineRef.value,
+  (newValue) => {
+    newValue?.lastElementChild?.focus();
   }
 );
 

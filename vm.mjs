@@ -16,6 +16,7 @@ class ValkyrieVM {
 
     this.eventListeners = {
       "print": [],
+      "pause": [],
     };
   }
 
@@ -36,24 +37,31 @@ class ValkyrieVM {
   async execute(instruction) {
     const parts = instruction.trim().split(/\s+/);
     const op = parts[0];
-    var args = parts.slice(1);
+    var rawArgs = parts.slice(1);
 
-    // fix string args
-    let currentArg = "";
-    var argsJoined = 1;
-    for (let i = 0; i < args.length; i++) {
-      if (args[i].startsWith('"')) {
-        currentArg += args[i];
-        for (let j = i + 1; j < args.length; j++) {
-          currentArg += ` ${args[j]}`;
-          argsJoined++;
-          if (args[j].endsWith('"')) {
-            break;
-          }
+    // fix args
+    let currentStringArg = false;
+    var args = [];
+
+    for (let i = 0; i < rawArgs.length; i++) {
+      if (currentStringArg) {
+        currentStringArg += ` ${rawArgs[i]}`;
+        if (rawArgs[i].endsWith('"')) {
+          args.push(currentStringArg);
+          currentStringArg = false;
         }
-        args.splice(i, argsJoined, currentArg);
-        currentArg = "";
-        argsJoined = 1;
+      } else if (!rawArgs[i]) {
+        continue;
+      } else if (rawArgs[i].startsWith('"')) {
+        currentStringArg = rawArgs[i];
+        if (rawArgs[i].endsWith('"')) {
+          args.push(currentStringArg);
+          currentStringArg = false;
+        }
+      } else if (rawArgs[i].startsWith('#')) {
+        break;
+      } else {
+        args.push(rawArgs[i]);
       }
     }
 
@@ -73,13 +81,13 @@ class ValkyrieVM {
         await this.stacks[to].push(value);
       },
       POP: async (args) => {
-        var to = args[0];
+        var from = args[0];
 
-        if (!this.isStackReference(to)) {
-          throw new Error(`Invalid stack reference: ${to}.`);
+        if (!this.isStackReference(from)) {
+          throw new Error(`Invalid stack reference: ${from}.`);
         }
 
-        await this.stacks[to].push(value);
+        await this.stacks[from].pop();
       },
       ADD: async (args) => {
         var to, value, delta;
@@ -406,11 +414,15 @@ class ValkyrieVM {
         await this.stacks[stack].push(Math.floor(Math.random() * (max - min + 1)) + min);
       },
       CLEARALL: async (args) => {
-        for (const stack in this.stacks) {
-          while (!stack.isEmpty()) {
-            await stack.pop();
-          }
+        for (let i = 0; i < Object.keys(this.stacks).length; i++) {
+          const stack = this.stacks[Object.keys(this.stacks)[i]];
+          await stack.clear();
         }
+      },
+      PAUSE: async (args) => {
+        await Promise.all(
+          this.eventListeners["pause"].map((callback) => callback())
+        );
       }
     };
 
@@ -459,7 +471,8 @@ class ValkyrieVM {
         "SWAP",
         "↡↟",
       ],
-      EMPTY: [
+      CLEAR: [
+        "CLEAR",
         "EMPTY",
         "𒌐",
       ],
@@ -477,6 +490,9 @@ class ValkyrieVM {
         "RANDINT",
         "𖤓☽",
       ],
+      PAUSE: [
+        "PAUSE"
+      ],
     }
 
     function getOperationByAlias(alias) {
@@ -487,7 +503,7 @@ class ValkyrieVM {
       }
     }
 
-    if (op) {
+    if (op && op !== "" && !op.startsWith("#")) {
       const operation = getOperationByAlias(op.toUpperCase());
       if (operation && operations[operation]) {
         await operations[operation](args);
