@@ -52,7 +52,7 @@ class ValkyrieVM {
       } else if (!rawArgs[i]) {
         continue;
       } else if (rawArgs[i].startsWith('"')) {
-        currentStringArg += rawArgs[i];
+        currentStringArg = rawArgs[i];
       } else if (rawArgs[i].startsWith('#')) {
         break;
       } else {
