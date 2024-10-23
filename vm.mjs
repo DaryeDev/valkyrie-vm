@@ -413,10 +413,10 @@ class ValkyrieVM {
         await this.stacks[stack].push(Math.floor(Math.random() * (max - min + 1)) + min);
       },
       CLEARALL: async (args) => {
-        for (const stack in this.stacks) {
-          while (!stack.isEmpty()) {
-            await stack.pop();
-          }
+
+        for (let i = 0; i < Object.keys(this.stacks).length; i++) {
+          const stack = this.stacks[Object.keys(this.stacks)[i]];
+          await stack.clear();
         }
       }
     };
@@ -466,7 +466,8 @@ class ValkyrieVM {
         "SWAP",
         "↡↟",
       ],
-      EMPTY: [
+      CLEAR: [
+        "CLEAR",
         "EMPTY",
         "𒌐",
       ],
@@ -494,7 +495,7 @@ class ValkyrieVM {
       }
     }
 
-    if (op && op !== "" && op !== "#") {
+    if (op && op !== "" && !op.startsWith("#")) {
       const operation = getOperationByAlias(op.toUpperCase());
       if (operation && operations[operation]) {
         await operations[operation](args);
