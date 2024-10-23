@@ -23,7 +23,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, nextTick } from "vue";
+import { ref, computed, watch, nextTick, onMounted } from "vue";
 
 const props = defineProps({
   modelValue: {
@@ -63,10 +63,15 @@ const currentIndex = computed({
   },
 });
 
+onMounted(() => {
+  currentLineRef.value?.lastElementChild?.focus();
+});
+
 watch(
   () => props.modelValue,
   (newValue) => {
     lines.value = newValue.split("\n").concat("");
+    currentIndex.value = 0;
   }
 );
 
@@ -153,6 +158,10 @@ const handleKeyDown = (e) => {
   display: flex;
   align-items: center;
   justify-content: center;
+
+  &.current {
+    border-bottom: 1px solid black;
+  }
 
   &:not(.current) {
     pointer-events: none;
