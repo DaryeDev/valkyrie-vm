@@ -53,6 +53,10 @@ class ValkyrieVM {
         continue;
       } else if (rawArgs[i].startsWith('"')) {
         currentStringArg = rawArgs[i];
+        if (rawArgs[i].endsWith('"')) {
+          args.push(currentStringArg);
+          currentStringArg = false;
+        }
       } else if (rawArgs[i].startsWith('#')) {
         break;
       } else {
